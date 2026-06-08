@@ -1,0 +1,51 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (request.auth.token.role == 'admin' || request.auth.token.role == 'super_admin');
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'super_admin';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User avatars
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Brand assets and logos
+    match /brands/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Template assets
+    match /templates/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // General uploads
+    match /uploads/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Admin only files
+    match /admin/{allPaths=**} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+  }
+}

@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profilePath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasProfile() {
+      return signedIn() && exists(profilePath());
+    }
+
+    function profile() {
+      return get(profilePath()).data;
+    }
+
+    function isAdmin() {
+      return hasProfile() && (profile().role == "admin" || profile().role == "super_admin");
+    }
+
+    function isSuperAdmin() {
+      return hasProfile() && profile().role == "super_admin";
+    }
+
+    function isActive() {
+      return hasProfile() && profile().status == "active";
+    }
+
+    function ownsUser(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow get: if ownsUser(userId) || isAdmin();
+      allow list: if isAdmin();
+
+      allow create: if ownsUser(userId)
+        && request.resource.data.id == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == "user"
+        && request.resource.data.status == "expired";
+
+      allow update: if isAdmin()
+        || (
+          ownsUser(userId)
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(["name", "avatar"])
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.email == resource.data.email
+        );
+
+      allow delete: if isSuperAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.createdBy == request.auth.uid);
+      allow create: if isActive() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdmin() || (isActive() && resource.data.createdBy == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /templates/{templateId} {
+      allow get, list: if signedIn();
+      allow create, update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /emailLogs/{logId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.createdBy == request.auth.uid);
+      allow create: if isActive() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /subscriptionRequests/{requestId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == "open";
+      allow update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /platformSettings/{settingId} {
+      allow get, list: if signedIn();
+      allow create, update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /activityLogs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+  }
+}
