@@ -57,13 +57,9 @@ function Footer({ color, children }: { color: string; children: React.ReactNode 
   );
 }
 
-function BrandedFormShell({ children, subject, to }: { children: React.ReactNode; subject: string; to?: string }) {
+function BrandedFormShell({ children }: { children: React.ReactNode; subject: string; to?: string }) {
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-[#f3f4f6] text-[#111827] shadow-2xl">
-      <div className="border-b border-[#e5e7eb] bg-white px-5 py-3 text-xs text-[#6b7280]">
-        <div className="truncate font-medium text-[#374151]">{subject}</div>
-        {to && <div className="truncate">To: {to}</div>}
-      </div>
       <div className="p-4 sm:p-6">{children}</div>
     </div>
   );
@@ -121,6 +117,13 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
             </div>
             <div className="bg-[#f9f9f9] px-6 py-5 text-left text-xs leading-5 text-[#666]">
               <p className="text-center font-bold text-[#f3ba2f]">Stay connected!</p>
+              <div className="mb-4 flex justify-center gap-3">
+                {["f", "x", "ig", "in", "▶"].map((item) => (
+                  <span key={item} className="grid h-8 w-8 place-items-center rounded-full bg-white text-[10px] font-bold text-[#f3ba2f] shadow">
+                    {item}
+                  </span>
+                ))}
+              </div>
               <p>Risk warning: Digital asset prices can be volatile. You are solely responsible for your investment decisions.</p>
               <p className="text-center">© 2024 Binance.com, All Rights Reserved.</p>
             </div>
@@ -144,7 +147,13 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
     render: (data) => (
       <BrandedFormShell subject={emailTemplates["Apple Pay"].subject(data)} to={value(data, "recipientEmail", data.recipient)}>
         <div className="mx-auto max-w-[600px] bg-[#f5f5f7] px-6 py-7 font-sans text-[#1d1d1f]">
-          <div className="mb-5 text-center text-5xl">●</div>
+          <div className="mb-5 text-center">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
+              alt="Apple Logo"
+              className="mx-auto h-16 w-auto"
+            />
+          </div>
           {warning(data)}
           <h2 className="mb-4 text-2xl font-semibold">Your Apple Pay deposit has been successfully processed!</h2>
           <p>Amount: <strong>{amount(data)}</strong></p>
@@ -183,6 +192,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
             <p><strong>Dear Client ({value(data, "senderHandle", "$sender")}),</strong></p>
             <p className="mt-4">Thank you for using <strong className="text-[#00C774]">Cash App</strong> as an online payment.</p>
             <p className="mt-4">The sum of <strong className="text-[#00C774]">{amount(data)}</strong> has been paid to your Cash App account by {value(data, "receiverHandle", "$receiver")}.</p>
+            <p className="mt-4">In our effort to protect all merchants' transactions, we have now received payment for your item from our secure server. This helps ensure both seller and buyer complete their responsibilities in every transaction we handle.</p>
             <p className="mt-4">Payment note: {value(data, "paymentNote", "Payment received")}</p>
           </div>
           <Footer color="#00C774">
@@ -227,7 +237,14 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
             </tr>
           </tbody>
           <tfoot className="bg-[#f5f5f5] text-center text-[#555]">
-            <tr><td className="p-5 text-sm">Money credited to your Venmo balance. <strong>Cash out</strong> to your bank overnight.</td></tr>
+            <tr><td className="p-5 text-sm">
+              <p>Money credited to your Venmo balance. <strong>Cash out</strong> to your bank overnight.</p>
+              <button type="button" className="my-4 rounded bg-[#3D95CE] px-8 py-3 font-bold text-white">Invite Friends!</button>
+              <hr className="my-4 border-[#ddd]" />
+              <p className="text-xs">Venmo is a service of PayPal, Inc., a licensed provider of money transfer services.</p>
+              <p className="text-xs">PayPal is located at 2211 North First Street, San Jose, CA 95131.</p>
+              <p className="text-xs">© 2024 Venmo, All Rights Reserved.</p>
+            </td></tr>
           </tfoot>
         </table>
       </BrandedFormShell>
@@ -345,7 +362,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
           <div className="my-5 grid gap-5 border-t border-[#ddd] pt-5 sm:grid-cols-2">
             <div>
               <h3 className="font-bold">Reversals:</h3>
-              <p className="text-sm leading-5">Please be aware that your payment can still be reversed after you have posted the item to your buyer.</p>
+              <p className="text-sm leading-5">Please be aware that your payment can still be reversed, for example if it is subject to a chargeback, even after you have posted the item to your buyer. Complying with PayPal's Seller Protection and following the trading guidelines on our Security page helps protect you from chargebacks.</p>
             </div>
             <div>
               <h3 className="font-bold">Dispatch Information:</h3>
