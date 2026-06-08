@@ -39,17 +39,24 @@ interface AuthState {
   updateUser: (user: Partial<User>) => void;
 }
 
-const newUserProfile = (id: string, name: string, email: string, avatar?: string): User => ({
-  id,
-  name,
-  email,
-  role: "user",
-  status: "expired",
-  avatar,
-  createdAt: new Date().toISOString().split("T")[0],
-  subscriptionType: "",
-  subscriptionEnd: "",
-});
+const newUserProfile = (id: string, name: string, email: string, avatar?: string): User => {
+  const profile: User = {
+    id,
+    name,
+    email,
+    role: "user",
+    status: "expired",
+    createdAt: new Date().toISOString().split("T")[0],
+    subscriptionType: "",
+    subscriptionEnd: "",
+  };
+
+  if (avatar) {
+    profile.avatar = avatar;
+  }
+
+  return profile;
+};
 
 const friendlyAuthError = (error: unknown) => {
   const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
