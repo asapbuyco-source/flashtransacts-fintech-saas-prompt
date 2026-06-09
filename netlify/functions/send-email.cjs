@@ -13,16 +13,16 @@ const GLOBAL_LIMITS = {
 };
 
 const BRAND_SENDERS = {
-  "Apple Pay": { name: "Apple Pay", localPart: "apple-pay" },
+  "Apple Pay": { name: "Apple Pay Receipt", localPart: "applepay" },
   Binance: { name: "Binance", localPart: "binance" },
-  "Cash App": { name: "Cash App", localPart: "cash-app" },
+  "Cash App": { name: "Cash App Notice", localPart: "cashapp" },
   Chime: { name: "Chime", localPart: "chime" },
   Coinbase: { name: "Coinbase", localPart: "coinbase" },
   Custom: { name: "FlashTransacts", localPart: "notify" },
   Interac: { name: "Interac", localPart: "interac" },
-  PayPal: { name: "PayPal", localPart: "paypal" },
+  PayPal: { name: "PayPal Receipt", localPart: "paypal" },
   Venmo: { name: "Venmo", localPart: "venmo" },
-  Zelle: { name: "Zelle", localPart: "zelle" },
+  Zelle: { name: "Zelle Transfer Notice", localPart: "zelle" },
 };
 
 const rateLimits = new Map();

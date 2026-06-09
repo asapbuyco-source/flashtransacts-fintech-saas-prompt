@@ -96,22 +96,38 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
     render: (data) => {
       const coin = value(data, "coin", "BTC");
       const quantity = value(data, "quantity", "2.5");
+      const fiatAmount = amount(data);
+      const transactionId = value(data, "transactionId", data.transactionId || "TXN-789012");
+
       return (
         <BrandedFormShell subject={emailTemplates.Binance.subject(data)} to={value(data, "recipientEmail", data.recipient)}>
-          <div className="mx-auto max-w-[600px] overflow-hidden rounded-lg bg-white shadow">
+          <div className="mx-auto max-w-[600px] overflow-hidden rounded-lg bg-[#f5f5f5] text-[#181A20] shadow">
             {warning(data)}
-            <div className="bg-black px-6 py-5 text-center">
+            <div className="bg-[#181A20] px-6 py-6 text-center">
               <div className="inline-flex items-center gap-3">
-                <div className="grid h-7 w-7 place-items-center bg-[#f3ba2f] text-xs font-black text-black">B</div>
+                <div className="grid h-8 w-8 place-items-center rounded bg-[#f3ba2f] text-sm font-black text-black">B</div>
                 <h1 className="m-0 text-xl font-bold text-[#f3ba2f]">BINANCE</h1>
               </div>
             </div>
-            <div className="px-6 py-6 text-[#333]">
-              <h2 className="mb-4 text-[22px] font-bold text-black">{coin} Deposit Successful</h2>
+            <div className="px-6 py-7 text-[#333]">
+              <div className="mb-5 text-center">
+                <div className="mx-auto mb-4 grid h-[60px] w-[60px] place-items-center rounded-full bg-[#f3ba2f] text-3xl font-bold text-black">✓</div>
+                <h2 className="m-0 text-[28px] font-bold text-black">{coin} Deposit Successful</h2>
+                <p className="mt-3 text-sm leading-5 text-[#666]">Deposit confirmed and available in your account.</p>
+              </div>
               <p className="mb-5 text-base leading-6">
                 Your deposit of {quantity} {coin} is now available in your Binance account. Log in to check your balance.
               </p>
-              <button type="button" className="mb-5 rounded bg-[#f3ba2f] px-6 py-3 font-bold text-black">Visit Your Dashboard</button>
+              <div className="mb-6 rounded-lg border border-[#e5e7eb] bg-white p-5">
+                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                  <span className="text-[#666]">Asset</span><strong className="text-right">{coin}</strong>
+                  <span className="text-[#666]">Quantity</span><strong className="text-right">{quantity} {coin}</strong>
+                  <span className="text-[#666]">Estimated value</span><strong className="text-right text-[#181A20]">{fiatAmount}</strong>
+                  <span className="text-[#666]">Status</span><strong className="text-right text-[#00B33C]">Completed</strong>
+                  <span className="text-[#666]">Transaction ID</span><strong className="text-right">{transactionId}</strong>
+                </div>
+              </div>
+              <button type="button" className="mb-5 w-full rounded bg-[#f3ba2f] px-6 py-3 font-bold text-black">View Deposit Details</button>
               <p className="text-sm leading-6">Do not recognize this activity? Please reset your password and contact customer support immediately.</p>
               <p className="mt-4 text-sm text-[#d9534f]">This is an automated message, please do not reply.</p>
             </div>

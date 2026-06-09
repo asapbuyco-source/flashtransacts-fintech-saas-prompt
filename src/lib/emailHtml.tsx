@@ -115,6 +115,7 @@ const emailCss = `
   .bg-\\[\\#00C774\\] { background-color: #00C774; }
   .bg-\\[\\#050505\\] { background-color: #050505; }
   .bg-\\[\\#10a8df\\] { background-color: #10a8df; }
+  .bg-\\[\\#181A20\\] { background-color: #181A20; }
   .bg-\\[\\#3D95CE\\] { background-color: #3D95CE; }
   .bg-\\[\\#7f5bf6\\] { background-color: #7f5bf6; }
   .bg-\\[\\#D4AF37\\] { background-color: #D4AF37; }
@@ -168,6 +169,7 @@ const emailCss = `
   .text-\\[\\#00B33C\\] { color: #00B33C; }
   .text-\\[\\#00C774\\] { color: #00C774; }
   .text-\\[\\#111827\\] { color: #111827; }
+  .text-\\[\\#181A20\\] { color: #181A20; }
   .text-\\[\\#721c24\\] { color: #721c24; }
   .text-\\[\\#1a0dab\\] { color: #1a0dab; }
   .text-\\[\\#333\\] { color: #333; }
