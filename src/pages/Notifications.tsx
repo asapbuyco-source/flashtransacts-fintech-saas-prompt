@@ -34,19 +34,46 @@ type NotificationForm = {
   metadata: Record<string, string>;
 };
 
-const createInitialForm = (brand = "PayPal"): NotificationForm => ({
-  recipientName: "",
-  recipientEmail: "",
-  amount: "",
-  currency: "XAF",
-  reference: "",
-  description: "",
-  transactionId: "",
-  notes: "",
-  type: "Deposit Notice",
-  brand,
-  metadata: getTemplateDefaults(brand),
-});
+const createInitialForm = (brand = "PayPal"): NotificationForm => {
+  const defaults = getTemplateDefaults(brand);
+
+  return {
+    recipientName: "",
+    recipientEmail: "",
+    amount: "",
+    currency: defaults.currency || "XAF",
+    reference: "",
+    description: "",
+    transactionId: "",
+    notes: "",
+    type: "Deposit Notice",
+    brand,
+    metadata: defaults,
+  };
+};
+
+const normalizeAmountInput = (input: string) => input.replace(/,/g, "").trim();
+
+const formatAmountWithCurrency = (input: string, currency: string) => {
+  const trimmed = input.trim();
+  const selectedCurrency = currency || "XAF";
+
+  if (!trimmed) {
+    return `0 ${selectedCurrency}`;
+  }
+
+  const currencyPattern = /\b[A-Z]{3}\b|[$€£¥₦₵]/;
+  if (currencyPattern.test(trimmed)) {
+    return trimmed;
+  }
+
+  const numericValue = Number(normalizeAmountInput(trimmed));
+  if (!Number.isFinite(numericValue)) {
+    return `${trimmed} ${selectedCurrency}`;
+  }
+
+  return `${numericValue.toLocaleString()} ${selectedCurrency}`;
+};
 
 export default function Notifications() {
   const {
@@ -77,9 +104,7 @@ export default function Notifications() {
     return matchesSearch && matchesStatus;
   });
 
-  const formattedAmount = form.amount
-    ? `${Number(form.amount.replace(/,/g, "") || 0).toLocaleString()} ${platformSettings.currencyLabel}`
-    : `0 ${platformSettings.currencyLabel}`;
+  const formattedAmount = formatAmountWithCurrency(form.amount, form.currency);
 
   const templateFields = getTemplateFields(form.brand);
   const fieldValue = (key: string) => {
@@ -132,13 +157,16 @@ export default function Notifications() {
   };
 
   const changeBrand = (brand: string) => {
+    const defaults = getTemplateDefaults(brand);
+
     setForm((current) => ({
       ...current,
       brand,
+      currency: defaults.currency || current.currency || "XAF",
       metadata: {
-        ...getTemplateDefaults(brand),
+        ...defaults,
         amount: current.amount,
-        currency: current.currency,
+        currency: defaults.currency || current.currency || "XAF",
         recipientEmail: current.recipientEmail,
         recipientName: current.recipientName,
       },
