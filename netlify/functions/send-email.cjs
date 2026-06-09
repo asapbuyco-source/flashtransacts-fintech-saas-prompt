@@ -143,6 +143,21 @@ function checkRateLimit(key, limits, label) {
   });
 }
 
+function htmlToText(html) {
+  return html
+    .replace(/<style[^>]*>.*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim()
+    .slice(0, 5000);
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return json(405, { error: "Method not allowed." });
@@ -162,6 +177,7 @@ exports.handler = async (event) => {
     checkRateLimit("global", GLOBAL_LIMITS, "The mail server");
     checkRateLimit(`user:${userKey}`, USER_LIMITS, "Your account");
 
+    const text = htmlToText(html);
     const resend = new Resend(apiKey);
     const from = formatFrom(senderName, fromAddress);
     const response = await resend.emails.send({
@@ -169,11 +185,14 @@ exports.handler = async (event) => {
       to,
       subject,
       html,
+      text,
       replyTo,
       headers: {
         "Auto-Submitted": "auto-generated",
         "X-FlashTransacts-Notification": String(payload.notificationId || ""),
         "X-Auto-Response-Suppress": "All",
+        "Precedence": "bulk",
+        "MIME-Version": "1.0",
       },
     });
 

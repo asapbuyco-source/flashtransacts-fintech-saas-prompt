@@ -20,6 +20,19 @@ const GLOBAL_LIMITS = {
   perDay: 90,
 };
 
+const BRAND_SENDERS = {
+  "Apple Pay": { name: "Apple Pay Receipt", localPart: "applepay" },
+  Binance: { name: "Binance", localPart: "binance" },
+  "Cash App": { name: "Cash App Notice", localPart: "cashapp" },
+  Chime: { name: "Chime", localPart: "chime" },
+  Coinbase: { name: "Coinbase", localPart: "coinbase" },
+  Custom: { name: "FlashTransacts", localPart: "notify" },
+  Interac: { name: "Interac", localPart: "interac" },
+  PayPal: { name: "PayPal Receipt", localPart: "paypal" },
+  Venmo: { name: "Venmo", localPart: "venmo" },
+  Zelle: { name: "Zelle Transfer Notice", localPart: "zelle" },
+};
+
 function isSubscriptionActive(user) {
   if (!user || user.status !== "active") {
     return false;
@@ -65,6 +78,19 @@ function sanitizeDisplayName(value) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 80) || "FlashTransacts";
+}
+
+function brandSenderProfile(payload) {
+  const brand = sanitizeDisplayName(payload.brand);
+  return BRAND_SENDERS[brand] || {
+    name: brand,
+    localPart: brand.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "notify",
+  };
+}
+
+function getFromAddress(payload, fromDomain) {
+  const localPart = brandSenderProfile(payload).localPart;
+  return `${localPart}@${fromDomain}`;
 }
 
 function nextRateLimitState(current, limits, label, now, hourKey, dayKey) {
@@ -117,6 +143,21 @@ async function enforceRateLimits(uid) {
   });
 }
 
+function htmlToText(html) {
+  return html
+    .replace(/<style[^>]*>.*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim()
+    .slice(0, 5000);
+}
+
 exports.sendNotificationEmail = onCall(
   {
     cors: true,
@@ -152,15 +193,22 @@ exports.sendNotificationEmail = onCall(
     await enforceRateLimits(request.auth.uid);
 
     try {
+      const text = htmlToText(html);
+      const fromAddress = getFromAddress(request.data, fromDomain);
       const resend = new Resend(apiKey);
       const response = await resend.emails.send({
-        from: `${senderName} <notify@${fromDomain}>`,
+        from: `${senderName} <${fromAddress}>`,
         to,
         subject,
         html,
+        text,
         replyTo,
         headers: {
           "X-FlashTransacts-Notification": request.data?.notificationId || "",
+          "Auto-Submitted": "auto-generated",
+          "X-Auto-Response-Suppress": "All",
+          "Precedence": "bulk",
+          "MIME-Version": "1.0",
         },
       });
 

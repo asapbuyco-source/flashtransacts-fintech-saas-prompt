@@ -14,9 +14,9 @@ export default function LandingPage() {
       <ParticleBackground />
       <div className="relative z-10">
         <HeroSection />
+        <DashboardPreview />
         <FeaturesSection />
         <ModulesSection />
-        <DashboardPreview />
         <TestimonialsSection />
         <PricingSection />
         <FAQSection />

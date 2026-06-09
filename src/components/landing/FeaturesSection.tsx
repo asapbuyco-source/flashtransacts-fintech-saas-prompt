@@ -1,49 +1,120 @@
 import { motion } from "framer-motion";
-import { Mail, BarChart3, LayoutTemplate, Bell, Users, Shield } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Bell,
+  Coins,
+  LayoutTemplate,
+  Mail,
+  Send,
+  Shield,
+  SlidersHorizontal,
+  Users,
+} from "lucide-react";
 import { features } from "@/lib/data";
 
 const iconMap: Record<string, React.ElementType> = {
-  Mail, BarChart3, LayoutTemplate, Bell, Users, Shield,
+  Mail,
+  BarChart3,
+  LayoutTemplate,
+  Bell,
+  Users,
+  Shield,
 };
+
+const workflow = [
+  {
+    icon: LayoutTemplate,
+    title: "Pick a payment layout",
+    description: "Start from a saved notification design for bank, wallet, crypto, or custom workflows.",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Edit every field",
+    description: "Update recipient details, amount, currency, notes, IDs, and service-specific fields with live preview.",
+  },
+  {
+    icon: Send,
+    title: "Send from your domain",
+    description: "Use your verified Resend sender, inline email styling, and production rate limits.",
+  },
+  {
+    icon: BarChart3,
+    title: "Review the logs",
+    description: "Track sent, failed, and manual subscription activity from Firestore-backed admin views.",
+  },
+];
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="relative py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="features" className="relative py-20 lg:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="mb-12 max-w-3xl"
         >
-          <span className="text-gold text-sm font-medium tracking-widest uppercase mb-4 block">Features</span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-            Everything You Need to{" "}
-            <span className="gold-text">Deliver</span>
+          <span className="mb-4 block text-sm font-medium uppercase tracking-widest text-gold">Product Tour</span>
+          <h2 className="text-3xl font-bold leading-tight md:text-4xl lg:text-5xl">
+            A complete workspace for payment notification operations.
           </h2>
-          <p className="text-text-secondary max-w-2xl mx-auto">
-            Powerful tools designed for modern fintech companies to create, send, and track transaction notifications at scale.
+          <p className="mt-4 max-w-2xl text-text-secondary">
+            FlashTransacts now presents the full workflow clearly: design, preview, deliver, log, and manually activate users without a payment API.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mb-12 grid gap-3 lg:grid-cols-4">
+          {workflow.map((step, index) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.06 }}
+              className="group relative overflow-hidden rounded-lg border border-white/10 bg-white/5 p-5"
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gold/25 bg-gold/10">
+                  <step.icon className="h-5 w-5 text-gold" />
+                </div>
+                <span className="text-xs text-text-muted">0{index + 1}</span>
+              </div>
+              <h3 className="mb-2 text-base font-semibold">{step.title}</h3>
+              <p className="text-sm leading-6 text-text-secondary">{step.description}</p>
+              {index < workflow.length - 1 && (
+                <ArrowRight className="absolute right-4 top-6 hidden h-4 w-4 text-gold/40 transition-transform group-hover:translate-x-1 lg:block" />
+              )}
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => {
             const Icon = iconMap[feature.icon] || Mail;
             return (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="glass rounded-2xl p-6 card-hover group"
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                className="card-hover rounded-lg border border-white/10 bg-[#0a0d12] p-5"
               >
-                <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center mb-5 group-hover:bg-gold/20 transition-colors">
-                  <Icon className="w-6 h-6 text-gold" />
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+                    <Icon className="h-5 w-5 text-gold" />
+                  </div>
+                  {index === 0 && (
+                    <div className="flex items-center gap-1 rounded-md border border-success/25 bg-success/10 px-2 py-1 text-[11px] text-success">
+                      <Coins className="h-3 w-3" />
+                      CFA, USD, EUR
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-sm text-text-secondary leading-relaxed">{feature.description}</p>
+                <h3 className="mb-2 text-lg font-semibold">{feature.title}</h3>
+                <p className="text-sm leading-6 text-text-secondary">{feature.description}</p>
               </motion.div>
             );
           })}

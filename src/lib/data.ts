@@ -2,46 +2,46 @@ export const features = [
   {
     icon: "Mail",
     title: "Email Delivery",
-    description: "High-performance email delivery with real-time tracking, delivery confirmation, and reusable brand-safe previews.",
+    description: "Send styled HTML payment notifications through your verified domain with saved logs and status feedback.",
   },
   {
     icon: "BarChart3",
-    title: "Analytics",
-    description: "Comprehensive analytics dashboard with real-time insights into notification performance and user engagement.",
+    title: "Delivery Logs",
+    description: "Review send attempts, failed messages, recipients, templates, and manual activity from Firestore-backed records.",
   },
   {
     icon: "LayoutTemplate",
-    title: "Templates",
-    description: "Beautiful, customizable email templates with visual builder and live preview capabilities.",
+    title: "Live Templates",
+    description: "Edit payment details, currencies, transaction IDs, notes, and recipients while watching the preview update.",
   },
   {
     icon: "Bell",
     title: "Notifications",
-    description: "Multi-platform notification system supporting various financial service providers and custom templates.",
+    description: "Create wallet, banking, crypto, and custom notification workflows from one clear sending screen.",
   },
   {
     icon: "Users",
     title: "User Management",
-    description: "Advanced user management with role-based access control, manual subscription activation, and activity tracking.",
+    description: "Manage role-based access, manual subscription requests, approval status, and user lifecycle controls.",
   },
   {
     icon: "Shield",
     title: "Admin Controls",
-    description: "Powerful admin panel with subscription management, audit logs, and security controls.",
+    description: "Set the WhatsApp contact number, activate plans manually, protect free-plan sending, and configure platform settings.",
   },
 ];
 
 export const modules = [
-  { name: "PayPal", description: "PayPal-style transaction notifications with authentic branding and layout.", color: "#003087" },
-  { name: "Apple Pay", description: "Apple Pay-style notifications with sleek, minimalist design.", color: "#000000" },
-  { name: "Venmo", description: "Venmo-style transaction notifications with modern aesthetics.", color: "#008CFF" },
-  { name: "Cash App", description: "Cash App-style notifications with bold, distinctive branding.", color: "#00D632" },
-  { name: "Zelle", description: "Zelle-style bank transfer notifications with professional formatting.", color: "#6C1D45" },
-  { name: "Chime", description: "Chime-style banking notifications with clean, friendly design.", color: "#1CAAD9" },
-  { name: "Interac", description: "Interac e-Transfer notifications with Canadian banking standards.", color: "#FF6B00" },
-  { name: "Coinbase", description: "Coinbase-style crypto transaction notifications with modern crypto aesthetics.", color: "#0052FF" },
-  { name: "Binance", description: "Binance-style trading notifications with dynamic crypto branding.", color: "#F0B90B" },
-  { name: "Custom", description: "Fully customizable notification templates with your own branding and design.", color: "#D4AF37" },
+  { name: "PayPal", description: "Configurable wallet receipt layout for authorized payment notifications.", color: "#003087" },
+  { name: "Apple Pay", description: "Minimal invoice-style layout for card and wallet payment receipts.", color: "#000000" },
+  { name: "Venmo", description: "Compact person-to-person transfer notice with editable note fields.", color: "#008CFF" },
+  { name: "Cash App", description: "Bold wallet notification layout with amount, sender, and status controls.", color: "#00D632" },
+  { name: "Zelle", description: "Bank-transfer notification layout with recipient and confirmation details.", color: "#6C1D45" },
+  { name: "Chime", description: "Clean banking alert layout for deposits, transfers, and balance updates.", color: "#1CAAD9" },
+  { name: "Interac", description: "e-Transfer notification layout with sender, message, and deposit details.", color: "#FF6B00" },
+  { name: "Coinbase", description: "Crypto transaction layout for asset, network, and estimated value fields.", color: "#0052FF" },
+  { name: "Binance", description: "Exchange notification layout with asset, quantity, value, and status fields.", color: "#F0B90B" },
+  { name: "Custom", description: "A flexible branded layout for your own notification use cases.", color: "#D4AF37" },
 ];
 
 export const testimonials = [
