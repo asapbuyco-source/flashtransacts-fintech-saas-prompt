@@ -2,6 +2,9 @@ import { renderEmailHtml } from "@/lib/emailHtml";
 import { getEmailSubject, type EmailPreviewData } from "@/lib/emailTemplates";
 
 type SendEmailResponse = {
+  details?: unknown;
+  error?: string;
+  from?: string;
   id: string;
 };
 
@@ -29,10 +32,16 @@ export async function sendNotificationEmail(data: EmailPreviewData) {
     }),
   });
 
-  const result = (await response.json()) as SendEmailResponse & { error?: string };
+  const result = (await response.json()) as SendEmailResponse;
 
   if (!response.ok) {
-    throw new Error(result.error || "Email delivery failed.");
+    const details =
+      result.details && typeof result.details === "object"
+        ? ` ${JSON.stringify(result.details)}`
+        : "";
+    const from = result.from ? ` Sender: ${result.from}.` : "";
+
+    throw new Error(`${result.error || "Email delivery failed."}${from}${details}`);
   }
 
   return result;

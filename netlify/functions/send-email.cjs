@@ -149,11 +149,23 @@ exports.handler = async (event) => {
     });
 
     if (response.error) {
-      return json(502, { error: response.error.message || "Resend rejected the email." });
+      console.error("Resend rejected email", {
+        error: response.error,
+        from: `${senderName} <${fromAddress}>`,
+        to,
+      });
+
+      return json(502, {
+        error: response.error.message || "Resend rejected the email.",
+        details: response.error,
+        from: `${senderName} <${fromAddress}>`,
+      });
     }
 
     return json(200, { id: response.data?.id || "" });
   } catch (error) {
+    console.error("Send email function failed", error);
+
     return json(400, {
       error: error instanceof Error ? error.message : "Email delivery failed.",
     });
