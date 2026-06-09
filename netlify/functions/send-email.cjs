@@ -1,4 +1,6 @@
 const { Resend } = require("resend");
+const juiceModule = require("juice");
+const juice = juiceModule.default || juiceModule;
 
 const USER_LIMITS = {
   minIntervalMs: 60 * 1000,
@@ -49,11 +51,33 @@ function assertEmail(value, field) {
 }
 
 function sanitizeDisplayName(value) {
-  return String(value || "FlashTransacts")
+  const cleaned = String(value || "")
     .replace(/[<>"\r\n]/g, "")
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 80) || "FlashTransacts";
+    .trim();
+
+  if (!cleaned || cleaned.includes("@")) {
+    return "FlashTransacts";
+  }
+
+  return cleaned.slice(0, 80);
+}
+
+function normalizeFromAddress(value) {
+  const configured = assertString(value, "RESEND_FROM_DOMAIN", 320);
+
+  if (configured.includes("@")) {
+    return assertEmail(configured, "RESEND_FROM_DOMAIN");
+  }
+
+  return `notify@${configured.replace(/^@+/, "")}`;
+}
+
+function getSenderName(payload) {
+  const brand = sanitizeDisplayName(payload.brand);
+  const senderName = sanitizeDisplayName(payload.senderName);
+
+  return senderName === "FlashTransacts" ? brand : senderName;
 }
 
 function checkRateLimit(key, limits, label) {
@@ -99,9 +123,13 @@ exports.handler = async (event) => {
     const to = assertEmail(payload.to, "Recipient email");
     const subject = assertString(payload.subject, "Subject", 200);
     const html = assertString(payload.html, "Email HTML", 500000);
-    const senderName = sanitizeDisplayName(payload.senderName || payload.brand);
+    const inlinedHtml = juice(html, {
+      preserveMediaQueries: true,
+      removeStyleTags: false,
+    });
+    const senderName = getSenderName(payload);
     const apiKey = assertString(process.env.RESEND_API_KEY, "RESEND_API_KEY", 500);
-    const fromDomain = assertString(process.env.RESEND_FROM_DOMAIN, "RESEND_FROM_DOMAIN", 253);
+    const fromAddress = normalizeFromAddress(process.env.RESEND_FROM_EMAIL || process.env.RESEND_FROM_DOMAIN);
     const replyTo = process.env.RESEND_REPLY_TO || undefined;
     const userKey = String(payload.userId || payload.userEmail || to).slice(0, 160);
 
@@ -110,10 +138,10 @@ exports.handler = async (event) => {
 
     const resend = new Resend(apiKey);
     const response = await resend.emails.send({
-      from: `${senderName} <notify@${fromDomain}>`,
+      from: `${senderName} <${fromAddress}>`,
       to,
       subject,
-      html,
+      html: inlinedHtml,
       replyTo,
       headers: {
         "X-FlashTransacts-Notification": String(payload.notificationId || ""),

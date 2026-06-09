@@ -21,7 +21,7 @@ export async function sendNotificationEmail(data: EmailPreviewData) {
       brand: data.brand,
       html: renderEmailHtml(data),
       notificationId: data.id,
-      senderName: data.brand || "FlashTransacts",
+      senderName: data.brand || data.type || "FlashTransacts",
       subject: getEmailSubject(data),
       to,
       userId: data.createdBy,
