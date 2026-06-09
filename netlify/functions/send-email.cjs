@@ -171,7 +171,9 @@ exports.handler = async (event) => {
       html,
       replyTo,
       headers: {
+        "Auto-Submitted": "auto-generated",
         "X-FlashTransacts-Notification": String(payload.notificationId || ""),
+        "X-Auto-Response-Suppress": "All",
       },
     });
 
@@ -189,7 +191,7 @@ exports.handler = async (event) => {
       });
     }
 
-    return json(200, { id: response.data?.id || "" });
+    return json(200, { from, id: response.data?.id || "" });
   } catch (error) {
     console.error("Send email function failed", error);
 
