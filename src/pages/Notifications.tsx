@@ -17,6 +17,7 @@ import { buildWhatsAppUrl, isSubscriptionActive } from "@/lib/subscription";
 import { useAuthStore } from "@/store/authStore";
 import EmailPreview from "@/components/EmailPreview";
 import type { Notification } from "@/store/appStore";
+import { sendNotificationEmail } from "@/lib/emailDelivery";
 import { getEmailSubject, getTemplateDefaults, getTemplateFields } from "@/lib/emailTemplates";
 
 type NotificationForm = {
@@ -53,6 +54,7 @@ export default function Notifications() {
     addNotification,
     updateNotification,
     addEmailLog,
+    updateEmailLog,
     platformSettings,
     addSubscriptionRequest,
   } = useAppStore();
@@ -61,6 +63,8 @@ export default function Notifications() {
   const [previewNotification, setPreviewNotification] = useState<Notification | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState("");
   const subscriptionActive = user?.role === "super_admin" || user?.role === "admin" || isSubscriptionActive(user);
 
   const [form, setForm] = useState<NotificationForm>(() => createInitialForm());
@@ -182,10 +186,20 @@ export default function Notifications() {
     });
   };
 
-  const handleCreate = () => {
+  const markSendFailure = (notificationId: string, logId: string, error: unknown) => {
+    const message = error instanceof Error ? error.message : "Email delivery failed. Please check your sender configuration.";
+    updateNotification(notificationId, { status: "failed" });
+    updateEmailLog(logId, { status: "failed" });
+    setSendError(message);
+  };
+
+  const handleCreate = async () => {
     if (!subscriptionActive) {
       return;
     }
+
+    setIsSending(true);
+    setSendError("");
 
     const newNotification = {
       id: `notif-${Date.now()}`,
@@ -211,9 +225,11 @@ export default function Notifications() {
         transactionId: form.transactionId,
       },
     };
+    const logId = `log-${Date.now()}`;
+
     addNotification(newNotification);
     addEmailLog({
-      id: `log-${Date.now()}`,
+      id: logId,
       recipient: form.recipientEmail,
       subject: getEmailSubject(newNotification),
       status: "pending",
@@ -226,22 +242,35 @@ export default function Notifications() {
       createdBy: user?.id || "",
       metadata: newNotification.metadata,
     });
-    setShowCreate(false);
-    setForm(createInitialForm(form.brand));
+
+    try {
+      await sendNotificationEmail(newNotification);
+      updateNotification(newNotification.id, { status: "delivered" });
+      updateEmailLog(logId, { status: "delivered" });
+      setShowCreate(false);
+      setForm(createInitialForm(form.brand));
+    } catch (error) {
+      markSendFailure(newNotification.id, logId, error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  const handleSend = (notification: Notification) => {
+  const handleSend = async (notification: Notification) => {
     if (!subscriptionActive) {
       requestSubscription();
       return;
     }
 
-    updateNotification(notification.id, { status: "delivered" });
+    setIsSending(true);
+    setSendError("");
+    updateNotification(notification.id, { status: "pending" });
+    const logId = `log-${Date.now()}`;
     addEmailLog({
-      id: `log-${Date.now()}`,
+      id: logId,
       recipient: notification.recipient,
       subject: getEmailSubject(notification),
-      status: "delivered",
+      status: "pending",
       timestamp: new Date().toISOString().replace("T", " ").slice(0, 19),
       opened: false,
       clicked: false,
@@ -251,6 +280,16 @@ export default function Notifications() {
       createdBy: user?.id || "",
       metadata: notification.metadata,
     });
+
+    try {
+      await sendNotificationEmail(notification);
+      updateNotification(notification.id, { status: "delivered" });
+      updateEmailLog(logId, { status: "delivered" });
+    } catch (error) {
+      markSendFailure(notification.id, logId, error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleCopy = async (notification: Notification) => {
@@ -277,7 +316,7 @@ export default function Notifications() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="btn-gold px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+          className="btn-gold w-full justify-center px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 sm:w-auto"
         >
           <Plus className="w-4 h-4" />
           Create Notification
@@ -305,6 +344,12 @@ export default function Notifications() {
             <MessageCircle className="w-4 h-4" />
             Contact Admin
           </a>
+        </div>
+      )}
+
+      {sendError && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {sendError}
         </div>
       )}
 
@@ -390,7 +435,8 @@ export default function Notifications() {
                       </button>
                       <button
                         onClick={() => handleSend(n)}
-                        className="p-1.5 rounded-lg hover:bg-white/10 text-text-muted hover:text-gold transition-colors"
+                        disabled={isSending}
+                        className="p-1.5 rounded-lg hover:bg-white/10 text-text-muted hover:text-gold transition-colors disabled:opacity-50"
                         title="Send"
                       >
                         <Send className="w-4 h-4" />
@@ -425,20 +471,20 @@ export default function Notifications() {
 
       {/* Create Modal */}
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/85 p-0 sm:items-center sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto border-glow"
+            className="flex h-[100dvh] w-full flex-col overflow-hidden bg-bg-primary border border-white/10 shadow-2xl shadow-black/60 sm:h-auto sm:max-h-[90vh] sm:max-w-6xl sm:rounded-2xl"
           >
-            <div className="flex items-center justify-between p-6 border-b border-white/5">
+            <div className="flex items-center justify-between border-b border-white/10 bg-bg-secondary px-4 py-4 sm:px-6">
               <h2 className="text-lg font-semibold">Create Notification</h2>
-              <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+              <button onClick={() => setShowCreate(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 grid grid-cols-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
+            <div className="grid flex-1 grid-cols-1 gap-5 overflow-y-auto p-4 sm:p-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:gap-6">
+              <div className="grid grid-cols-1 content-start gap-4 rounded-xl border border-white/10 bg-bg-secondary p-4 sm:grid-cols-2 sm:p-5">
                 <div>
                   <label className="block text-xs font-medium mb-1.5">Brand</label>
                   <select
@@ -524,25 +570,29 @@ export default function Notifications() {
                   </div>
                 )}
               </div>
-              <div className="min-w-0">
-                <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Live Email Preview</div>
-                <EmailPreview data={draftNotification} compact />
+              <div className="min-w-0 rounded-xl border border-white/10 bg-bg-secondary p-4 sm:p-5">
+                <div className="mb-3 text-xs font-medium uppercase tracking-wider text-text-muted">Live Email Preview</div>
+                <div className="overflow-x-auto rounded-lg bg-white p-2 sm:p-3">
+                  <div className="min-w-[320px]">
+                    <EmailPreview data={draftNotification} compact />
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-6 border-t border-white/5">
+            <div className="flex flex-col gap-3 border-t border-white/10 bg-bg-secondary p-4 sm:flex-row sm:items-center sm:p-6">
               <button
                 onClick={handleCreate}
-                disabled={!subscriptionActive}
-                className="btn-gold px-6 py-2.5 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!subscriptionActive || isSending}
+                className="btn-gold inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
               >
                 <Send className="w-4 h-4" />
-                Generate & Send
+                {isSending ? "Sending..." : "Generate & Send"}
               </button>
               <button
                 onClick={() => setPreviewNotification(draftNotification)}
-                className="px-6 py-2.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 px-6 py-2.5 text-sm transition-colors hover:bg-white/5 sm:w-auto"
               >
-                <Eye className="w-4 h-4 inline mr-1" />
+                <Eye className="w-4 h-4" />
                 Preview
               </button>
               {!subscriptionActive && (
@@ -554,13 +604,13 @@ export default function Notifications() {
                   target="_blank"
                   rel="noreferrer"
                   onClick={requestSubscription}
-                  className="px-4 py-2.5 rounded-lg text-sm border border-gold/30 text-gold hover:bg-gold/10 transition-colors inline-flex items-center gap-2"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gold/30 px-4 py-2.5 text-sm text-gold transition-colors hover:bg-gold/10 sm:w-auto"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Contact Admin
                 </a>
               )}
-              <button onClick={() => setShowCreate(false)} className="px-6 py-2.5 rounded-lg text-sm text-text-secondary hover:text-white transition-colors ml-auto">
+              <button onClick={() => setShowCreate(false)} className="w-full rounded-lg px-6 py-2.5 text-sm text-text-secondary transition-colors hover:bg-white/5 hover:text-white sm:ml-auto sm:w-auto">
                 Cancel
               </button>
             </div>
@@ -569,20 +619,24 @@ export default function Notifications() {
       )}
 
       {previewNotification && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+        <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/85 p-0 sm:items-center sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border-glow"
+            className="flex h-[100dvh] w-full flex-col overflow-hidden bg-bg-primary border border-white/10 shadow-2xl shadow-black/60 sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-2xl"
           >
-            <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <div className="flex items-center justify-between border-b border-white/10 bg-bg-secondary p-4 sm:p-5">
               <h2 className="text-lg font-semibold">Email Preview</h2>
-              <button onClick={() => setPreviewNotification(null)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+              <button onClick={() => setPreviewNotification(null)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5">
-              <EmailPreview data={previewNotification} />
+            <div className="flex-1 overflow-y-auto bg-bg-primary p-4 sm:p-5">
+              <div className="overflow-x-auto rounded-lg bg-white p-2 sm:p-3">
+                <div className="min-w-[320px]">
+                  <EmailPreview data={previewNotification} />
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>

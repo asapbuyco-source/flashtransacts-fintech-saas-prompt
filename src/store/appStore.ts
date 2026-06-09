@@ -87,6 +87,7 @@ interface AppState {
   updateTemplate: (id: string, updates: Partial<Template>) => void;
   deleteTemplate: (id: string) => void;
   addEmailLog: (log: EmailLog) => void;
+  updateEmailLog: (id: string, updates: Partial<EmailLog>) => void;
   addUser: (user: User) => void;
   updateUserStatus: (id: string, status: UserStatus) => void;
   updateUserSubscription: (id: string, updates: Pick<User, "status" | "subscriptionEnd" | "subscriptionType">) => void;
@@ -196,6 +197,15 @@ export const useAppStore = create<AppState>()(
         void upsertRecord("emailLogs", log).catch(reportFirestoreError);
         set((state) => ({
           emailLogs: [log, ...state.emailLogs],
+        }));
+      },
+
+      updateEmailLog: (id, updates) => {
+        void patchRecord("emailLogs", id, updates).catch(reportFirestoreError);
+        set((state) => ({
+          emailLogs: state.emailLogs.map((log) =>
+            log.id === id ? { ...log, ...updates } : log
+          ),
         }));
       },
 

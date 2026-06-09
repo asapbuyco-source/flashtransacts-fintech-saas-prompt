@@ -51,6 +51,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isAdmin = user?.role === "super_admin" || user?.role === "admin";
   const allNavItems = isAdmin ? [...navItems, ...adminNavItems] : navItems;
+  const mobileNavItems = isAdmin
+    ? [navItems[0], navItems[1], navItems[2], navItems[3], adminNavItems[0]]
+    : [navItems[0], navItems[1], navItems[2], navItems[3], navItems[5]];
 
   return (
     <div className="min-h-screen flex bg-bg-primary">
@@ -62,18 +65,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setMobileOpen(false)}
-            className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/80 z-40 lg:hidden"
           />
         )}
       </AnimatePresence>
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed lg:sticky top-0 left-0 h-screen z-50 glass border-r border-white/5 flex flex-col transition-all duration-300 ${
+        className={`fixed lg:sticky top-0 left-0 h-screen z-50 bg-bg-primary border-r border-white/10 shadow-2xl shadow-black/40 flex flex-col transition-all duration-300 ${
           collapsed ? "w-20" : "w-64"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-white/10">
           <Link to="/" className={`flex items-center gap-2 ${collapsed ? "justify-center w-full" : ""}`}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center shrink-0">
               <Zap className="w-5 h-5 text-bg-primary" />
@@ -84,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             )}
           </Link>
-          <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1 text-text-muted">
+          <button onClick={() => setMobileOpen(false)} className="lg:hidden p-2 text-text-muted hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -111,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/5 space-y-1">
+        <div className="p-3 border-t border-white/10 space-y-1">
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={`hidden lg:flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:text-white hover:bg-white/5 transition-all w-full ${
@@ -135,8 +138,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        <header className="h-16 glass border-b border-white/5 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
-          <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 text-white">
+        <header className="h-16 bg-bg-primary/95 border-b border-white/10 shadow-xl shadow-black/20 backdrop-blur-xl flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+          <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 -ml-2 text-white rounded-lg hover:bg-white/5">
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-3 ml-auto">
@@ -149,8 +152,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </header>
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="p-4 pb-24 lg:p-6">{children}</main>
       </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-bg-primary/95 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-2xl shadow-black/50 backdrop-blur-xl lg:hidden">
+        <div className="grid grid-cols-5 gap-1">
+          {mobileNavItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] font-medium transition-colors ${
+                  isActive
+                    ? "bg-gold/10 text-gold border border-gold/25"
+                    : "text-text-muted hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span className="max-w-full truncate">{item.label.replace(" Panel", "").replace("Email ", "")}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

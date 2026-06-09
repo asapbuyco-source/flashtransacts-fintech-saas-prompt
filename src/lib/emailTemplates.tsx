@@ -26,9 +26,9 @@ type TemplateDefinition = {
 const today = new Date().toISOString().split("T")[0];
 
 function value(data: EmailPreviewData, key: string, fallback = "") {
-  const fromMeta = data.metadata?.[key];
   const direct = data[key as keyof EmailPreviewData];
-  return String(fromMeta || direct || fallback);
+  const fromMeta = data.metadata?.[key];
+  return String(direct || fromMeta || fallback);
 }
 
 function amount(data: EmailPreviewData, fallback = "750,000 CFA") {

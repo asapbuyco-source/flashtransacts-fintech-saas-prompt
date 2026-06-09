@@ -39,8 +39,8 @@ export default function Navbar() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled || !isLanding
-          ? "glass border-b border-white/5"
-          : "bg-transparent"
+          ? "bg-bg-primary/95 border-b border-white/10 shadow-2xl shadow-black/30 backdrop-blur-xl"
+          : "bg-bg-primary/95 border-b border-white/10 shadow-2xl shadow-black/30 backdrop-blur-xl md:bg-transparent md:border-transparent md:shadow-none"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,27 +112,27 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass border-t border-white/5"
+            className="md:hidden bg-bg-primary border-t border-white/10 shadow-2xl shadow-black/40"
           >
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 py-4 space-y-2">
               {isLanding && (
                 <>
-                  <button onClick={() => scrollToSection("features")} className="block w-full text-left text-sm text-text-secondary py-2">Features</button>
-                  <button onClick={() => scrollToSection("modules")} className="block w-full text-left text-sm text-text-secondary py-2">Modules</button>
-                  <button onClick={() => scrollToSection("pricing")} className="block w-full text-left text-sm text-text-secondary py-2">Pricing</button>
-                  <button onClick={() => scrollToSection("faq")} className="block w-full text-left text-sm text-text-secondary py-2">FAQ</button>
+                  <button onClick={() => scrollToSection("features")} className="block w-full rounded-lg px-3 py-3 text-left text-sm text-text-secondary hover:bg-white/5 hover:text-white">Features</button>
+                  <button onClick={() => scrollToSection("modules")} className="block w-full rounded-lg px-3 py-3 text-left text-sm text-text-secondary hover:bg-white/5 hover:text-white">Modules</button>
+                  <button onClick={() => scrollToSection("pricing")} className="block w-full rounded-lg px-3 py-3 text-left text-sm text-text-secondary hover:bg-white/5 hover:text-white">Pricing</button>
+                  <button onClick={() => scrollToSection("faq")} className="block w-full rounded-lg px-3 py-3 text-left text-sm text-text-secondary hover:bg-white/5 hover:text-white">FAQ</button>
                 </>
               )}
               {isAuthenticated ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block text-sm text-text-secondary py-2">Dashboard</Link>
-                  {isAdmin && <Link to="/admin" onClick={() => setMobileOpen(false)} className="block text-sm text-gold py-2">Admin Panel</Link>}
-                  <button onClick={() => { logout(); setMobileOpen(false); }} className="block text-sm text-danger py-2">Logout</button>
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-3 text-sm text-text-secondary hover:bg-white/5 hover:text-white">Dashboard</Link>
+                  {isAdmin && <Link to="/admin" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-3 text-sm text-gold hover:bg-gold/10">Admin Panel</Link>}
+                  <button onClick={() => { logout(); setMobileOpen(false); }} className="block w-full rounded-lg px-3 py-3 text-left text-sm text-danger hover:bg-danger/10">Logout</button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm text-text-secondary py-2">Sign In</Link>
-                  <Link to="/register" onClick={() => setMobileOpen(false)} className="block text-sm text-gold py-2">Create Account</Link>
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-3 text-sm text-text-secondary hover:bg-white/5 hover:text-white">Sign In</Link>
+                  <Link to="/register" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-3 text-sm text-gold hover:bg-gold/10">Create Account</Link>
                 </>
               )}
             </div>
