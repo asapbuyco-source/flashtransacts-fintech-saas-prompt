@@ -12,6 +12,19 @@ const GLOBAL_LIMITS = {
   perDay: 90,
 };
 
+const BRAND_SENDERS = {
+  "Apple Pay": { name: "Apple Pay", localPart: "apple-pay" },
+  Binance: { name: "Binance", localPart: "binance" },
+  "Cash App": { name: "Cash App", localPart: "cash-app" },
+  Chime: { name: "Chime", localPart: "chime" },
+  Coinbase: { name: "Coinbase", localPart: "coinbase" },
+  Custom: { name: "FlashTransacts", localPart: "notify" },
+  Interac: { name: "Interac", localPart: "interac" },
+  PayPal: { name: "PayPal", localPart: "paypal" },
+  Venmo: { name: "Venmo", localPart: "venmo" },
+  Zelle: { name: "Zelle", localPart: "zelle" },
+};
+
 const rateLimits = new Map();
 
 function json(statusCode, body) {
@@ -61,21 +74,40 @@ function sanitizeDisplayName(value) {
   return cleaned.slice(0, 80);
 }
 
-function normalizeFromAddress(value) {
+function senderDomainFromEnv(value) {
   const configured = assertString(value, "RESEND_FROM_DOMAIN", 320);
+  const domain = configured.includes("@") ? configured.split("@").pop() : configured;
+  const cleaned = domain.replace(/^@+/, "").trim().toLowerCase();
 
-  if (configured.includes("@")) {
-    return assertEmail(configured, "RESEND_FROM_DOMAIN");
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(cleaned)) {
+    throw new Error("RESEND_FROM_DOMAIN must be a verified domain, such as flashtransacts.xyz.");
   }
 
-  return `notify@${configured.replace(/^@+/, "")}`;
+  return cleaned;
+}
+
+function brandSenderProfile(payload) {
+  const brand = sanitizeDisplayName(payload.brand);
+  return BRAND_SENDERS[brand] || {
+    name: brand,
+    localPart: brand.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "notify",
+  };
 }
 
 function getSenderName(payload) {
-  const brand = sanitizeDisplayName(payload.brand);
-  const senderName = sanitizeDisplayName(payload.senderName);
+  return brandSenderProfile(payload).name;
+}
 
-  return senderName === "FlashTransacts" ? brand : senderName;
+function getFromAddress(payload, configuredSender) {
+  const domain = senderDomainFromEnv(configuredSender);
+  const localPart = brandSenderProfile(payload).localPart;
+
+  return assertEmail(`${localPart}@${domain}`, "Sender email");
+}
+
+function formatFrom(senderName, fromAddress) {
+  const escapedName = senderName.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return `"${escapedName}" <${fromAddress}>`;
 }
 
 function checkRateLimit(key, limits, label) {
@@ -123,7 +155,7 @@ exports.handler = async (event) => {
     const html = assertString(payload.html, "Email HTML", 500000);
     const senderName = getSenderName(payload);
     const apiKey = assertString(process.env.RESEND_API_KEY, "RESEND_API_KEY", 500);
-    const fromAddress = normalizeFromAddress(process.env.RESEND_FROM_EMAIL || process.env.RESEND_FROM_DOMAIN);
+    const fromAddress = getFromAddress(payload, process.env.RESEND_FROM_DOMAIN || process.env.RESEND_FROM_EMAIL);
     const replyTo = process.env.RESEND_REPLY_TO || undefined;
     const userKey = String(payload.userId || payload.userEmail || to).slice(0, 160);
 
@@ -131,8 +163,9 @@ exports.handler = async (event) => {
     checkRateLimit(`user:${userKey}`, USER_LIMITS, "Your account");
 
     const resend = new Resend(apiKey);
+    const from = formatFrom(senderName, fromAddress);
     const response = await resend.emails.send({
-      from: `${senderName} <${fromAddress}>`,
+      from,
       to,
       subject,
       html,
@@ -145,14 +178,14 @@ exports.handler = async (event) => {
     if (response.error) {
       console.error("Resend rejected email", {
         error: response.error,
-        from: `${senderName} <${fromAddress}>`,
+        from,
         to,
       });
 
       return json(502, {
         error: response.error.message || "Resend rejected the email.",
         details: response.error,
-        from: `${senderName} <${fromAddress}>`,
+        from,
       });
     }
 
