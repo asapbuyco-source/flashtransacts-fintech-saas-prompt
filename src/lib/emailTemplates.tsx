@@ -136,35 +136,131 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
     color: "#0071e3",
     label: "Apple Pay",
     fields: [
-      { key: "amount", label: "Amount", placeholder: "750000", required: true },
-      { key: "currency", label: "Currency", placeholder: "CFA", required: true },
-      { key: "recipientEmail", label: "Receiver's Apple Pay ID", type: "email", placeholder: "receiver@example.com", required: true },
-      { key: "senderEmail", label: "Sender's Apple Pay ID", type: "email", placeholder: "sender@example.com" },
-      { key: "warningMessage", label: "Optional Warning Message", type: "textarea", placeholder: "Enter a warning message" },
+      { key: "recipientName", label: "Client Name", placeholder: "Clients" },
+      { key: "amount", label: "Amount", placeholder: "29.88", required: true },
+      { key: "currency", label: "Currency", placeholder: "USD", required: true },
+      { key: "merchantName", label: "Merchant", placeholder: "cleverbirdge, Inc" },
+      { key: "merchantEmail", label: "Merchant Email", type: "email", placeholder: "payment@apple.com" },
+      { key: "itemDescription", label: "Description", placeholder: "Email Itunes GiftCard" },
+      { key: "itemCode", label: "Item Code", placeholder: "#96782658" },
+      { key: "quantity", label: "Qty", placeholder: "1" },
+      { key: "transactionId", label: "Transaction ID", placeholder: "965A578180L053022U" },
+      { key: "invoiceId", label: "Invoice ID", placeholder: "2950320884" },
+      { key: "instructions", label: "Instructions to merchant", placeholder: "You haven't entered any instructions." },
+      { key: "recipientEmail", label: "Apple Pay Email", type: "email", placeholder: "payment@apple.com", required: true },
     ],
-    defaults: { currency: "CFA" },
-    subject: (data) => `Apple Pay Deposit Confirmed: ${amount(data)}`,
+    defaults: {
+      recipientName: "Clients",
+      amount: "29.88 USD",
+      currency: "USD",
+      merchantName: "cleverbirdge, Inc",
+      merchantEmail: "payment@apple.com",
+      itemDescription: "Email Itunes GiftCard",
+      itemCode: "#96782658",
+      quantity: "1",
+      transactionId: "965A578180L053022U",
+      invoiceId: "2950320884",
+      instructions: "You haven't entered any instructions.",
+    },
+    subject: (data) => `Apple Pay Receipt: ${amount(data)}`,
     render: (data) => (
       <BrandedFormShell subject={emailTemplates["Apple Pay"].subject(data)} to={value(data, "recipientEmail", data.recipient)}>
-        <div className="mx-auto max-w-[600px] bg-[#f5f5f7] px-6 py-7 font-sans text-[#1d1d1f]">
-          <div className="mb-5 text-center">
+        <div className="mx-auto max-w-[680px] border-[14px] border-[#4b4d50] bg-white px-12 py-14 font-sans text-[12px] leading-4 text-black shadow">
+          <div className="mb-9 flex items-start justify-between">
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
               alt="Apple Logo"
-              className="mx-auto h-16 w-auto"
+              className="h-20 w-auto"
             />
+            <div className="pt-3 text-right text-[10px]">
+              Transaction ID:{" "}
+              <span className="font-semibold text-[#1a0dab] underline">
+                {value(data, "transactionId", data.transactionId || "965A578180L053022U")}
+              </span>
+            </div>
           </div>
-          {warning(data)}
-          <h2 className="mb-4 text-2xl font-semibold">Your Apple Pay deposit has been successfully processed!</h2>
-          <p>Amount: <strong>{amount(data)}</strong></p>
-          <p>Receiver ID: <strong>{value(data, "recipientEmail", data.recipient || "receiver@example.com")}</strong></p>
-          <p className="mt-4">Thank you for using Apple Pay. Your funds are now available in your account.</p>
-          <div className="my-6 text-center">
-            <button type="button" className="rounded bg-[#0071e3] px-5 py-3 font-semibold text-white">View in Dashboard</button>
+
+          <div className="mb-6">
+            <p className="font-bold">Hello {value(data, "recipientName", data.recipientName || "Clients")},</p>
+            <p className="font-bold text-[#9a6a1c]">
+              You sent a payment of {amount(data, "29.88 USD")} to Apple, Inc
+            </p>
+            <p>
+              <span className="font-bold text-[#1a0dab] underline">{value(data, "recipientEmail", "payment@apple.com")}</span>
+            </p>
           </div>
-          <hr className="border-[#d1d1d6]" />
-          <p className="mt-4 text-sm">Apple Pay is a secure and convenient way to make payments. Please ensure your account details are kept safe.</p>
-          <p className="font-bold">© 2024 Apple Inc. All rights reserved.</p>
+
+          <p className="mb-2">It may take a few moments for this transaction to appear in your account.</p>
+
+          <div className="mb-10 grid grid-cols-2 gap-8 border-t border-[#c7c7c7] pt-2">
+            <div>
+              <p className="font-bold">Merchant</p>
+              <p>{value(data, "merchantName", "cleverbirdge, Inc")}</p>
+              <p className="font-semibold text-[#1a0dab] underline">{value(data, "merchantEmail", "payment@apple.com")}</p>
+            </div>
+            <div>
+              <p className="font-bold">Instructions to merchant</p>
+              <p className="font-bold">Creditcard</p>
+              <p>{value(data, "instructions", "You haven't entered any instructions.")}</p>
+            </div>
+          </div>
+
+          <table className="mb-4 w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="border-y border-[#c7c7c7] text-left">
+                <th className="py-2 font-normal">Description</th>
+                <th className="py-2 text-right font-normal">Unit Price</th>
+                <th className="py-2 text-right font-normal">Qty</th>
+                <th className="py-2 text-right font-normal">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-[#d7d7d7]">
+                <td className="py-3">
+                  {value(data, "itemDescription", "Email Itunes GiftCard")} -{" "}
+                  <span className="font-semibold text-[#1a0dab] underline">{value(data, "itemCode", "#96782658")}</span>
+                </td>
+                <td className="py-3 text-right">{amount(data, "29.88 USD")}</td>
+                <td className="py-3 text-right">{value(data, "quantity", "1")}</td>
+                <td className="py-3 text-right">{amount(data, "29.88 USD")}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div className="mb-7 ml-auto w-48 text-[11px]">
+            <div className="grid grid-cols-2 gap-y-2">
+              <span className="font-bold">Subtotal</span>
+              <span className="text-right">{amount(data, "29.88 USD")}</span>
+              <span className="font-bold">Total</span>
+              <span className="text-right">{amount(data, "29.88 USD")}</span>
+              <span className="col-span-2 h-4" />
+              <span className="font-bold">Payment</span>
+              <span className="text-right">{amount(data, "29.88 USD")}</span>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <p className="font-bold">Invoice ID: {value(data, "invoiceId", "2950320884")}</p>
+            <p className="font-bold">Issues with this transaction?</p>
+            <p className="mt-4 text-[10px] font-bold">
+              If this not your transaction, press the button below. We will help the process of recovery refund and protect your account.
+            </p>
+            <button type="button" className="mt-4 w-72 bg-[#10a8df] py-3 text-center text-[12px] font-bold text-white">
+              Dispute Transaction
+            </button>
+          </div>
+
+          <div className="mt-24 border-t border-[#d7d7d7] pt-5 text-[10px] leading-4">
+            <p>Copyright © 2017 Apple Inc. All rights reserved.</p>
+            <p className="mt-3">
+              Consumer advisory: Apple Pte Ltd, the Holder of the Apple? payment stored value facility, does not require the approval
+              of the Monetary Authority of California. Consumers (users) are advised to read the terms and conditions carefully.
+            </p>
+            <div className="mt-5 flex justify-center gap-3 border-t border-[#e1e1e1] pt-3">
+              <button type="button" className="rounded border border-[#777] px-5 py-2 text-[12px]">Buy with  Pay</button>
+              <button type="button" className="rounded border border-[#777] px-7 py-2 text-[12px]"> Pay</button>
+            </div>
+          </div>
         </div>
       </BrandedFormShell>
     ),
