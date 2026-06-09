@@ -1,6 +1,4 @@
 const { Resend } = require("resend");
-const juiceModule = require("juice");
-const juice = juiceModule.default || juiceModule;
 
 const USER_LIMITS = {
   minIntervalMs: 60 * 1000,
@@ -113,6 +111,16 @@ function checkRateLimit(key, limits, label) {
   });
 }
 
+async function inlineEmailHtml(html) {
+  const juiceModule = await import("juice");
+  const juice = juiceModule.default || juiceModule;
+
+  return juice(html, {
+    preserveMediaQueries: true,
+    removeStyleTags: false,
+  });
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return json(405, { error: "Method not allowed." });
@@ -123,10 +131,7 @@ exports.handler = async (event) => {
     const to = assertEmail(payload.to, "Recipient email");
     const subject = assertString(payload.subject, "Subject", 200);
     const html = assertString(payload.html, "Email HTML", 500000);
-    const inlinedHtml = juice(html, {
-      preserveMediaQueries: true,
-      removeStyleTags: false,
-    });
+    const inlinedHtml = await inlineEmailHtml(html);
     const senderName = getSenderName(payload);
     const apiKey = assertString(process.env.RESEND_API_KEY, "RESEND_API_KEY", 500);
     const fromAddress = normalizeFromAddress(process.env.RESEND_FROM_EMAIL || process.env.RESEND_FROM_DOMAIN);
