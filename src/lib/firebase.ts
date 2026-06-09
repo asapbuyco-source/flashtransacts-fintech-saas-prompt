@@ -2,7 +2,6 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { initializeFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,7 +18,6 @@ export const db = initializeFirestore(firebaseApp, {
   ignoreUndefinedProperties: true,
 });
 export const auth = getAuth(firebaseApp);
-export const functions = getFunctions(firebaseApp, import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || "us-central1");
 export const googleProvider = new GoogleAuthProvider();
 
 export const analyticsReady = isSupported()
