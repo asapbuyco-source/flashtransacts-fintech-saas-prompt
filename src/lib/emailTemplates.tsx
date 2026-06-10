@@ -1,3 +1,4 @@
+import type { ReactElement, ReactNode } from "react";
 import type { Notification } from "@/store/appStore";
 
 export type EmailPreviewData = Partial<Notification> & {
@@ -20,7 +21,7 @@ type TemplateDefinition = {
   fields: TemplateField[];
   defaults: Record<string, string>;
   subject: (data: EmailPreviewData) => string;
-  render: (data: EmailPreviewData) => JSX.Element;
+  render: (data: EmailPreviewData) => ReactElement;
 };
 
 const today = new Date().toISOString().split("T")[0];
@@ -49,7 +50,7 @@ function warning(data: EmailPreviewData, tone: "red" | "soft" = "red") {
   return <div className={classes}>Warning: {text}</div>;
 }
 
-function Footer({ color, children }: { color: string; children: React.ReactNode }) {
+function Footer({ color, children }: { color: string; children: ReactNode }) {
   return (
     <div style={{ backgroundColor: color }} className="px-6 py-5 text-center text-xs leading-5 text-white">
       {children}
@@ -57,7 +58,7 @@ function Footer({ color, children }: { color: string; children: React.ReactNode 
   );
 }
 
-function BrandedFormShell({ children }: { children: React.ReactNode; subject: string; to?: string }) {
+function BrandedFormShell({ children }: { children: ReactNode; subject: string; to?: string }) {
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-[#f3f4f6] text-[#111827] shadow-2xl">
       <div className="p-4 sm:p-6">{children}</div>
