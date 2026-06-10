@@ -13,17 +13,21 @@ const GLOBAL_LIMITS = {
 };
 
 const BRAND_SENDERS = {
-  "Apple Pay": { name: "Payment Receipt", localPart: "applepay" },
+  "Apple Pay": { name: "Payment Receipt", localPart: "receipts" },
   Binance: { name: "Binance", localPart: "binance" },
-  "Cash App": { name: "Deposit Notice", localPart: "cashapp" },
+  "Cash App": { name: "Deposit Notice", localPart: "deposits" },
   Chime: { name: "Chime", localPart: "chime" },
   Coinbase: { name: "Coinbase", localPart: "coinbase" },
   Custom: { name: "FlashTransacts", localPart: "notify" },
   Interac: { name: "Interac", localPart: "interac" },
-  PayPal: { name: "Payment Received", localPart: "paypal" },
+  PayPal: { name: "Payment Received", localPart: "payments" },
   Venmo: { name: "Venmo", localPart: "venmo" },
-  Zelle: { name: "Transfer Received", localPart: "zelle" },
+  Zelle: { name: "Transfer Received", localPart: "transfers" },
 };
+
+const BRAND_ALIASES = Object.fromEntries(
+  Object.keys(BRAND_SENDERS).map((brand) => [normalizeBrandKey(brand), brand])
+);
 
 const rateLimits = new Map();
 
@@ -74,6 +78,12 @@ function sanitizeDisplayName(value) {
   return cleaned.slice(0, 80);
 }
 
+function normalizeBrandKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
 function senderDomainFromEnv(value) {
   const configured = assertString(value, "RESEND_FROM_DOMAIN", 320);
   const domain = configured.includes("@") ? configured.split("@").pop() : configured;
@@ -88,7 +98,9 @@ function senderDomainFromEnv(value) {
 
 function brandSenderProfile(payload) {
   const brand = sanitizeDisplayName(payload.brand);
-  return BRAND_SENDERS[brand] || {
+  const canonicalBrand = BRAND_ALIASES[normalizeBrandKey(brand)] || brand;
+
+  return BRAND_SENDERS[canonicalBrand] || {
     name: brand,
     localPart: brand.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "notify",
   };
