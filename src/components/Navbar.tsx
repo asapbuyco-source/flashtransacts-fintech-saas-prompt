@@ -40,7 +40,7 @@ export default function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled || !isLanding
           ? "bg-bg-primary/95 border-b border-white/10 shadow-2xl shadow-black/30 backdrop-blur-xl"
-          : "bg-bg-primary/95 border-b border-white/10 shadow-2xl shadow-black/30 backdrop-blur-xl md:bg-transparent md:border-transparent md:shadow-none"
+          : "bg-bg-primary/95 border-b border-white/10 shadow-2xl shadow-black/30 backdrop-blur-xl"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

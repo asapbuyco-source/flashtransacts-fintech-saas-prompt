@@ -160,11 +160,11 @@ export const faqs = [
   },
   {
     question: "What delivery rates can I expect?",
-    answer: "The dashboard provides detailed delivery logs, opening activity, and status tracking so admins can review every notification run.",
+    answer: "The dashboard provides delivery attempts, status feedback, and saved logs so admins can review every notification run. Inbox placement still depends on sender authentication, domain reputation, and message quality.",
   },
   {
     question: "Is my data secure?",
-    answer: "Absolutely. We use Firebase with role-based access control, encrypted storage, and follow SOC 2 compliance standards. All data is encrypted at rest and in transit.",
+    answer: "FlashTransacts uses Firebase authentication, Firestore-backed records, protected routes, and role-based admin access. Production deployments should keep secrets server-side and maintain strict Firestore rules.",
   },
   {
     question: "Can I upgrade or downgrade my plan?",

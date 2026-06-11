@@ -1,3 +1,4 @@
+const nodemailer = require("nodemailer");
 const { Resend } = require("resend");
 
 const USER_LIMITS = {
@@ -15,7 +16,7 @@ const GLOBAL_LIMITS = {
 const BRAND_SENDERS = {
   "Apple Pay": { name: "Receipts", localPart: "receipts" },
   Binance: { name: "Binance", localPart: "binance" },
-  "Cash App": { name: "Cash App", localPart: "Cash App" },
+  "Cash App": { name: "Cash App", localPart: "CashApp" },
   Chime: { name: "Chime", localPart: "chime" },
   Coinbase: { name: "Coinbase", localPart: "coinbase" },
   Custom: { name: "FlashTransacts", localPart: "notify" },
@@ -25,11 +26,28 @@ const BRAND_SENDERS = {
   Zelle: { name: "Zelle", localPart: "Zelle" },
 };
 
+const GMAIL_TEMPLATE_FROM_NAMES = {
+  "Apple Pay": "Apple Pay Receipt",
+  Binance: "Binance Deposit",
+  "Cash App": "Cash App Deposit ",
+  Chime: "Chime Deposit ",
+  Coinbase: "Coinbase Transfer ",
+  Custom: "FlashTransacts",
+  Interac: "Interac Transfer ",
+  PayPal: "PayPal Receipt ",
+  Venmo: "Venmo Payment ",
+  Zelle: "Zelle Transfer ",
+};
+
 const BRAND_ALIASES = Object.fromEntries(
   Object.keys(BRAND_SENDERS).map((brand) => [normalizeBrandKey(brand), brand])
 );
 
 const rateLimits = new Map();
+const EMAIL_PROVIDERS = {
+  GMAIL_SMTP: "gmail_smtp",
+  RESEND: "resend",
+};
 
 function json(statusCode, body) {
   return {
@@ -84,6 +102,31 @@ function normalizeBrandKey(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+function normalizeSenderLocalPart(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._+-]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "notify";
+}
+
+function getEmailProvider() {
+  const configured = String(process.env.EMAIL_PROVIDER || "").trim().toLowerCase();
+
+  if (["gmail", "gmail_smtp", "google", "smtp"].includes(configured)) {
+    return EMAIL_PROVIDERS.GMAIL_SMTP;
+  }
+
+  if (configured === EMAIL_PROVIDERS.RESEND) {
+    return EMAIL_PROVIDERS.RESEND;
+  }
+
+  if (process.env.GMAIL_USER && (process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_REFRESH_TOKEN)) {
+    return EMAIL_PROVIDERS.GMAIL_SMTP;
+  }
+
+  return EMAIL_PROVIDERS.RESEND;
+}
+
 function senderDomainFromEnv(value) {
   const configured = assertString(value, "RESEND_FROM_DOMAIN", 320);
   const domain = configured.includes("@") ? configured.split("@").pop() : configured;
@@ -106,15 +149,70 @@ function brandSenderProfile(payload) {
   };
 }
 
+function canonicalBrandName(payload) {
+  const brand = sanitizeDisplayName(payload.brand);
+  return BRAND_ALIASES[normalizeBrandKey(brand)] || brand;
+}
+
 function getSenderName(payload) {
   return brandSenderProfile(payload).name;
 }
 
 function getFromAddress(payload, configuredSender) {
   const domain = senderDomainFromEnv(configuredSender);
-  const localPart = brandSenderProfile(payload).localPart;
+  const localPart = normalizeSenderLocalPart(brandSenderProfile(payload).localPart);
 
   return assertEmail(`${localPart}@${domain}`, "Sender email");
+}
+
+function getGmailFromAddress() {
+  return assertEmail(process.env.GMAIL_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || process.env.GMAIL_USER, "GMAIL_FROM_EMAIL");
+}
+
+function getGmailFromName(payload) {
+  const mode = String(process.env.GMAIL_FROM_NAME_MODE || "template").trim().toLowerCase();
+
+  if (mode === "fixed") {
+    return sanitizeDisplayName(process.env.GMAIL_FROM_NAME || process.env.EMAIL_FROM_NAME || "FlashTransacts");
+  }
+
+  const templateName = GMAIL_TEMPLATE_FROM_NAMES[canonicalBrandName(payload)];
+  return sanitizeDisplayName(templateName || process.env.GMAIL_FROM_NAME || process.env.EMAIL_FROM_NAME || "FlashTransacts");
+}
+
+function getGmailTransport() {
+  const user = assertEmail(process.env.GMAIL_USER, "GMAIL_USER");
+  const clientId = process.env.GMAIL_CLIENT_ID;
+  const clientSecret = process.env.GMAIL_CLIENT_SECRET;
+  const refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+  const appPassword = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASS;
+  const port = Number(process.env.GMAIL_SMTP_PORT || 465);
+  const secure = String(process.env.GMAIL_SMTP_SECURE || (port === 465 ? "true" : "false")).toLowerCase() !== "false";
+
+  if (clientId && clientSecret && refreshToken) {
+    return nodemailer.createTransport({
+      host: process.env.GMAIL_SMTP_HOST || "smtp.gmail.com",
+      port,
+      secure,
+      auth: {
+        type: "OAuth2",
+        user,
+        clientId,
+        clientSecret,
+        refreshToken,
+      },
+    });
+  }
+
+  return nodemailer.createTransport({
+    host: process.env.GMAIL_SMTP_HOST || "smtp.gmail.com",
+    port,
+    secure,
+    auth: {
+      user,
+      pass: assertString(appPassword, "GMAIL_APP_PASSWORD", 500).replace(/\s+/g, ""),
+    },
+  });
 }
 
 function formatFrom(senderName, fromAddress) {
@@ -170,6 +268,76 @@ function htmlToText(html) {
     .slice(0, 5000);
 }
 
+async function sendWithResend({ payload, to, subject, html, text }) {
+  const senderName = getSenderName(payload);
+  const apiKey = assertString(process.env.RESEND_API_KEY, "RESEND_API_KEY", 500);
+  const fromAddress = getFromAddress(payload, process.env.RESEND_FROM_DOMAIN || process.env.RESEND_FROM_EMAIL);
+  const replyTo = process.env.RESEND_REPLY_TO || undefined;
+  const resend = new Resend(apiKey);
+  const from = formatFrom(senderName, fromAddress);
+  const response = await resend.emails.send({
+    from,
+    to,
+    subject,
+    html,
+    text,
+    replyTo,
+    headers: {
+      "Auto-Submitted": "auto-generated",
+      "X-FlashTransacts-Notification": String(payload.notificationId || ""),
+      "X-Auto-Response-Suppress": "All",
+      "MIME-Version": "1.0",
+    },
+  });
+
+  if (response.error) {
+    console.error("Resend rejected email", {
+      error: response.error,
+      from,
+      to,
+    });
+
+    return {
+      error: response.error.message || "Resend rejected the email.",
+      details: response.error,
+      from,
+      provider: EMAIL_PROVIDERS.RESEND,
+      statusCode: 502,
+    };
+  }
+
+  return {
+    from,
+    id: response.data?.id || "",
+    provider: EMAIL_PROVIDERS.RESEND,
+  };
+}
+
+async function sendWithGmailSmtp({ payload, to, subject, html, text }) {
+  const from = formatFrom(getGmailFromName(payload), getGmailFromAddress());
+  const replyTo = process.env.GMAIL_REPLY_TO || process.env.RESEND_REPLY_TO || undefined;
+  const transporter = getGmailTransport();
+  const response = await transporter.sendMail({
+    from,
+    to,
+    subject,
+    html,
+    text,
+    replyTo,
+    headers: {
+      "Auto-Submitted": "auto-generated",
+      "X-FlashTransacts-Notification": String(payload.notificationId || ""),
+      "X-Auto-Response-Suppress": "All",
+    },
+  });
+
+  return {
+    from,
+    id: response.messageId || "",
+    provider: EMAIL_PROVIDERS.GMAIL_SMTP,
+  };
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return json(405, { error: "Method not allowed." });
@@ -180,49 +348,23 @@ exports.handler = async (event) => {
     const to = assertEmail(payload.to, "Recipient email");
     const subject = assertString(payload.subject, "Subject", 200);
     const html = assertString(payload.html, "Email HTML", 500000);
-    const senderName = getSenderName(payload);
-    const apiKey = assertString(process.env.RESEND_API_KEY, "RESEND_API_KEY", 500);
-    const fromAddress = getFromAddress(payload, process.env.RESEND_FROM_DOMAIN || process.env.RESEND_FROM_EMAIL);
-    const replyTo = process.env.RESEND_REPLY_TO || undefined;
     const userKey = String(payload.userId || payload.userEmail || to).slice(0, 160);
 
     checkRateLimit("global", GLOBAL_LIMITS, "The mail server");
     checkRateLimit(`user:${userKey}`, USER_LIMITS, "Your account");
 
     const text = htmlToText(html);
-    const resend = new Resend(apiKey);
-    const from = formatFrom(senderName, fromAddress);
-    const response = await resend.emails.send({
-      from,
-      to,
-      subject,
-      html,
-      text,
-      replyTo,
-      headers: {
-        "Auto-Submitted": "auto-generated",
-        "X-FlashTransacts-Notification": String(payload.notificationId || ""),
-        "X-Auto-Response-Suppress": "All",
-        "Precedence": "bulk",
-        "MIME-Version": "1.0",
-      },
-    });
+    const provider = getEmailProvider();
+    const response =
+      provider === EMAIL_PROVIDERS.GMAIL_SMTP
+        ? await sendWithGmailSmtp({ payload, to, subject, html, text })
+        : await sendWithResend({ payload, to, subject, html, text });
 
     if (response.error) {
-      console.error("Resend rejected email", {
-        error: response.error,
-        from,
-        to,
-      });
-
-      return json(502, {
-        error: response.error.message || "Resend rejected the email.",
-        details: response.error,
-        from,
-      });
+      return json(response.statusCode || 502, response);
     }
 
-    return json(200, { from, id: response.data?.id || "" });
+    return json(200, response);
   } catch (error) {
     console.error("Send email function failed", error);
 

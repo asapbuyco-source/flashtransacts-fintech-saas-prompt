@@ -1,10 +1,16 @@
 import { motion } from "framer-motion";
-import { Check, MessageCircle, Sparkles } from "lucide-react";
+import { Check, ClipboardCheck, MessageCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { pricingPlans } from "@/lib/data";
 import { buildWhatsAppUrl } from "@/lib/subscription";
 import { useAppStore } from "@/store/appStore";
 import { useAuthStore } from "@/store/authStore";
+
+const manualSteps = [
+  { icon: ClipboardCheck, title: "Choose a CFA plan", description: "No card checkout or payment API is used." },
+  { icon: MessageCircle, title: "Contact admin", description: "The WhatsApp number is controlled from admin settings." },
+  { icon: ShieldCheck, title: "Get activated", description: "Admin approves the account and sets access duration." },
+];
 
 export default function PricingSection() {
   const { user, isAuthenticated } = useAuthStore();
@@ -45,6 +51,28 @@ export default function PricingSection() {
           </p>
         </motion.div>
 
+        <div className="mb-8 grid gap-3 md:grid-cols-3">
+          {manualSteps.map((step, index) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.05 }}
+              className="premium-panel p-5"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gold/25 bg-gold/10">
+                  <step.icon className="h-5 w-5 text-gold" />
+                </div>
+                <span className="text-xs text-text-muted">Step 0{index + 1}</span>
+              </div>
+              <h3 className="mb-2 text-base font-semibold">{step.title}</h3>
+              <p className="text-sm leading-6 text-text-secondary">{step.description}</p>
+            </motion.div>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {pricingPlans.map((plan, index) => (
             <motion.div
@@ -53,7 +81,7 @@ export default function PricingSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.08 }}
-              className={`relative rounded-2xl p-6 card-hover ${
+              className={`relative rounded-lg p-6 card-hover ${
                 plan.highlighted
                   ? "glass-gold border-glow"
                   : "glass"

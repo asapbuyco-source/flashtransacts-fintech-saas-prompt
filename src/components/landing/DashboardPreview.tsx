@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 
 const builderFields = [
-  { label: "Brand", value: "Coinbase" },
-  { label: "Type", value: "Deposit Notice" },
+  { label: "Layout", value: "Coinbase" },
+  { label: "Message", value: "Deposit Notice" },
   { label: "Amount", value: "1,250.00 USD" },
   { label: "Recipient", value: "client@email.com" },
 ];
@@ -43,10 +43,10 @@ export default function DashboardPreview() {
         >
           <span className="mb-4 block text-sm font-medium uppercase tracking-widest text-gold">Application Preview</span>
           <h2 className="text-3xl font-bold leading-tight md:text-4xl lg:text-5xl">
-            The landing page now shows the app, not just the promise.
+            One dashboard for templates, delivery, subscriptions, and logs.
           </h2>
           <p className="mt-4 max-w-2xl text-text-secondary">
-            Visitors can understand how the dashboard works before they sign in: build an email, choose a currency, request access, and monitor delivery.
+            The workspace keeps the full operation in view: build the message, choose the currency, send from the configured provider, and review every attempt from Firestore-backed records.
           </p>
         </motion.div>
 
@@ -55,9 +55,9 @@ export default function DashboardPreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.75 }}
-          className="overflow-hidden rounded-lg border border-white/10 bg-[#080b10] shadow-2xl shadow-black/40"
+          className="premium-panel overflow-hidden shadow-2xl shadow-black/40"
         >
-          <div className="flex flex-col border-b border-white/10 bg-white/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col border-b border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(212,175,55,0.05))] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold text-bg-primary">
                 <Activity className="h-5 w-5" />
@@ -67,14 +67,14 @@ export default function DashboardPreview() {
                 <p className="text-xs text-text-muted">Production-ready notification operations</p>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-2 text-xs text-success sm:mt-0">
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-xs text-success sm:mt-0">
               <Shield className="h-3.5 w-3.5" />
               Verified domain sender
             </div>
           </div>
 
           <div className="grid gap-0 lg:grid-cols-[240px_1fr]">
-            <aside className="border-b border-white/10 bg-black/25 p-4 lg:border-b-0 lg:border-r">
+            <aside className="border-b border-white/10 bg-black/20 p-4 lg:border-b-0 lg:border-r">
               <div className="space-y-2">
                 {[
                   ["Notifications", Send],

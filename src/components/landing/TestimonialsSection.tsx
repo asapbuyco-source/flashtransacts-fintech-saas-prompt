@@ -36,7 +36,7 @@ const useCases = [
 
 export default function TestimonialsSection() {
   return (
-    <section className="relative border-y border-white/10 bg-[#07090d] py-20 lg:py-28">
+    <section className="relative border-y border-white/10 bg-[linear-gradient(180deg,rgba(7,13,19,0.86),rgba(5,7,13,0.94))] py-20 backdrop-blur-sm lg:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -47,10 +47,10 @@ export default function TestimonialsSection() {
         >
           <span className="mb-4 block text-sm font-medium uppercase tracking-widest text-gold">What It Does</span>
           <h2 className="text-3xl font-bold leading-tight md:text-4xl lg:text-5xl">
-            Built around the jobs users actually open the app to finish.
+            Built around the jobs operators open the app to finish.
           </h2>
           <p className="mt-4 text-text-secondary">
-            The landing page now showcases the product capabilities directly instead of relying on generic testimonials.
+            FlashTransacts keeps the daily workflow focused: prepare a notification, confirm the preview, send through the configured provider, and manage access without a payment gateway.
           </p>
         </motion.div>
 
@@ -62,7 +62,7 @@ export default function TestimonialsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.45, delay: index * 0.05 }}
-              className="rounded-lg border border-white/10 bg-white/5 p-5"
+              className="premium-panel p-5"
             >
               <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg border border-gold/25 bg-gold/10">
                 <item.icon className="h-5 w-5 text-gold" />

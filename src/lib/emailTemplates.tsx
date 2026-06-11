@@ -36,16 +36,13 @@ function amount(data: EmailPreviewData, fallback = "750,000 CFA") {
   return value(data, "amount", fallback);
 }
 
-function warning(data: EmailPreviewData, tone: "red" | "soft" = "red") {
+function warning(data: EmailPreviewData) {
   const text = value(data, "warningMessage") || value(data, "notes");
   if (!text) {
     return null;
   }
 
-  const classes =
-    tone === "soft"
-      ? "mb-5 rounded-md border border-[#f5c6cb] bg-[#f8d7da] px-4 py-3 text-center text-sm font-semibold text-[#721c24]"
-      : "mb-5 rounded-md bg-[#ff3b30] px-4 py-3 text-center text-sm font-semibold text-white";
+  const classes = "mb-5 rounded-md bg-[#ff3b30] px-4 py-3 text-center text-sm font-semibold text-white";
 
   return <div className={classes}>Warning: {text}</div>;
 }
@@ -201,6 +198,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
       { key: "invoiceId", label: "Invoice ID", placeholder: "2950320884" },
       { key: "instructions", label: "Instructions to merchant", placeholder: "You haven't entered any instructions." },
       { key: "recipientEmail", label: "Apple Pay Email", type: "email", placeholder: "payment@apple.com", required: true },
+      { key: "warningMessage", label: "Optional Warning Message", type: "textarea" },
     ],
     defaults: {
       recipientName: "Clients",
@@ -219,6 +217,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
     render: (data) => (
       <BrandedFormShell subject={emailTemplates["Apple Pay"].subject(data)} to={value(data, "recipientEmail", data.recipient)}>
         <div className="mx-auto max-w-[680px] border-[14px] border-[#4b4d50] bg-white px-12 py-14 font-sans text-[12px] leading-4 text-black shadow">
+          {warning(data)}
           <div className="mb-9 flex items-start justify-between">
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
@@ -332,7 +331,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
     render: (data) => (
       <BrandedFormShell subject={emailTemplates["Cash App"].subject(data)} to={value(data, "recipientEmail", data.recipient)}>
         <div className="mx-auto max-w-[600px] bg-white text-[#333]">
-          {warning(data, "soft")}
+          {warning(data)}
           <div className="bg-[#00C774] px-6 py-12 text-center text-white">
             <h1 className="text-4xl font-bold">Cash App</h1>
           </div>
@@ -372,7 +371,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
           <tbody>
             <tr>
               <td className="p-6">
-                {warning(data, "soft")}
+                {warning(data)}
                 <h2 className="text-xl font-bold text-[#3D95CE]">CoWork Greenville paid {value(data, "receiverHandle", "@receiver")}</h2>
                 <p className="text-[#555]">For: {value(data, "paymentNote", "Invoice payment")}</p>
                 <p className="text-lg font-bold text-[#3D95CE]">+ {amount(data)}</p>
@@ -435,7 +434,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
       return (
         <BrandedFormShell subject={emailTemplates.Interac.subject(data)} to={value(data, "recipientEmail", data.recipient)}>
         <div style={{ backgroundColor: "#f2f2f2", color: "#202124", fontFamily: "Arial, Helvetica, sans-serif", margin: "0 auto", maxWidth: "600px", padding: "18px 14px" }}>
-          {warning(data, "soft")}
+          {warning(data)}
           <div style={{ backgroundColor: "#202020", padding: "12px 18px" }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%"><tbody><tr><td align="left" style={{ width: "120px" }}><span style={{ backgroundColor: "#ffc629", borderRadius: "7px", color: "#1b1b1b", display: "inline-block", fontSize: "18px", fontWeight: 800, lineHeight: "20px", padding: "9px 10px" }}>e-T</span></td><td align="right" style={{ color: "#f4f4f4", fontSize: "16px", lineHeight: "22px" }}>View in browser&nbsp;&nbsp;|&nbsp;&nbsp;Francais&nbsp;&nbsp;?</td></tr></tbody></table></div>
           <div style={{ backgroundColor: "#ffffff", padding: "42px 18px 26px" }}>
             <h1 style={{ color: "#111111", fontSize: "32px", fontWeight: 700, lineHeight: "40px", margin: "0 0 48px" }}>Hi {recipientName},</h1>
@@ -470,7 +469,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
           <div className="mb-5 text-3xl font-bold uppercase text-[#7f5bf6]"><span className="text-4xl">Z</span>elle<sup>®</sup></div>
           <p className="text-lg"><strong>{value(data, "senderName", "John Smith")}</strong> sent you</p>
           <p className="my-3 text-5xl font-bold">{amount(data)}</p>
-          {warning(data, "soft")}
+          {warning(data)}
           <button type="button" className="my-4 min-w-[220px] rounded bg-[#7f5bf6] px-6 py-4 text-lg font-bold text-white">Accept Money</button>
           <p className="mt-4 text-sm text-[#666]">Zelle® is a fast, safe & easy way to send money to and receive money from friends, family, and others you trust.</p>
           <div className="mt-8 bg-[#f4f4f4] p-5 text-sm text-[#7f5bf6]">Zelle® · Contact · Privacy · Legal</div>
@@ -486,12 +485,14 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
       { key: "senderName", label: "Sender's Name", placeholder: "John Smith" },
       { key: "recipientEmail", label: "Receiver's Email", type: "email", placeholder: "receiver@example.com", required: true },
       { key: "paymentNote", label: "Payment Note (Optional)", placeholder: "Deposit" },
+      { key: "warningMessage", label: "Optional Warning Message", type: "textarea" },
     ],
     defaults: { senderName: "John Smith", paymentNote: "Deposit" },
     subject: () => "Your deposit is now available",
     render: (data) => (
       <BrandedFormShell subject={emailTemplates.Chime.subject(data)} to={value(data, "recipientEmail", data.recipient)}>
         <div className="mx-auto max-w-[600px] bg-[rgb(242,241,246)] py-4 text-[#333]">
+          {warning(data)}
           <table className="mx-auto w-full max-w-[600px] rounded-lg bg-white">
             <thead><tr><th className="p-5 text-center text-[32px] font-semibold lowercase tracking-wide text-[#00B33C]">chime<sup className="text-[10px]">®</sup></th></tr></thead>
             <tbody><tr><td className="px-6 pb-6 text-left">
@@ -535,7 +536,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
           <div className="my-5 grid gap-5 border-t border-[#ddd] pt-5 sm:grid-cols-2">
             <div>
               <h3 className="font-bold">Reversals:</h3>
-              <p className="text-sm leading-5">Please be aware that your payment can still be reversed, for example if it is subject to a chargeback, even after you have posted the item to your buyer. Complying with PayPal's Seller Protection and following the trading guidelines on our Security page helps protect you from chargebacks.</p>
+              <p className="text-sm leading-5">Please be aware that your payment can still be reversed, for example if it is subject to a chargeback, even after you have posted the item to your buyer. Following the PayPal Seller Protection guidelines and the trading guidelines on our Security page helps protect you from chargebacks.</p>
             </div>
             <div>
               <h3 className="font-bold">Dispatch Information:</h3>
@@ -565,6 +566,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
       { key: "usdValue", label: "CFA Equivalent", placeholder: "750000" },
       { key: "senderName", label: "Sender's Name", placeholder: "John Smith" },
       { key: "recipientEmail", label: "Receiver's Email", type: "email", placeholder: "receiver@example.com", required: true },
+      { key: "warningMessage", label: "Optional Warning Message", type: "textarea" },
     ],
     defaults: { cryptoType: "BTC", cryptoAmount: "2.5", usdValue: "750,000 CFA", senderName: "John Smith" },
     subject: (data) => `${value(data, "senderName", "John Smith")} just sent you ${value(data, "cryptoAmount", "2.5")} ${value(data, "cryptoType", "BTC")}`,
@@ -575,6 +577,7 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
       return (
         <BrandedFormShell subject={emailTemplates.Coinbase.subject(data)} to={value(data, "recipientEmail", data.recipient)}>
           <div className="mx-auto max-w-[600px] bg-[#0052FF] p-5 text-white">
+            {warning(data)}
             <table className="w-full overflow-hidden rounded-lg bg-white text-[#333] shadow">
               <thead className="bg-[#0052FF] text-center text-white"><tr><th className="p-5 text-[28px] font-semibold lowercase">coinbase</th></tr></thead>
               <tbody>
@@ -650,3 +653,4 @@ export function getEmailSubject(data: EmailPreviewData) {
 export function renderEmailTemplate(data: EmailPreviewData) {
   return getEmailTemplate(data.brand).render(data);
 }
+

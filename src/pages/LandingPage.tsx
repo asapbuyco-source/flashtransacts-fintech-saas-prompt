@@ -10,7 +10,8 @@ import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen">
+    <div className="premium-page-bg relative min-h-screen overflow-hidden">
+      <div className="premium-grid pointer-events-none fixed inset-0 z-0 opacity-45" />
       <ParticleBackground />
       <div className="relative z-10">
         <HeroSection />

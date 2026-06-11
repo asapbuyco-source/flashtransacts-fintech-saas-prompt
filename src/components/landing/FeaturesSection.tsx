@@ -3,7 +3,10 @@ import {
   ArrowRight,
   BarChart3,
   Bell,
+  CheckCircle2,
   Coins,
+  Gauge,
+  Globe2,
   LayoutTemplate,
   Mail,
   Send,
@@ -45,6 +48,24 @@ const workflow = [
   },
 ];
 
+const operationHighlights = [
+  {
+    icon: Gauge,
+    title: "Know the message before it sends",
+    description: "Every amount, currency, receiver, note, and transaction field updates inside the preview before delivery.",
+  },
+  {
+    icon: Globe2,
+    title: "Use the sender you configured",
+    description: "Run through your verified Resend domain or Gmail SMTP setup, with the visible sender controlled in one place.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Approve access manually",
+    description: "Users request plans through WhatsApp and admins activate subscription status from the protected admin section.",
+  },
+];
+
 export default function FeaturesSection() {
   return (
     <section id="features" className="relative py-20 lg:py-28">
@@ -65,6 +86,25 @@ export default function FeaturesSection() {
           </p>
         </motion.div>
 
+        <div className="premium-panel mb-12 grid overflow-hidden md:grid-cols-3">
+          {operationHighlights.map((item, index) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.05 }}
+              className="border-b border-white/10 p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"
+            >
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-teal-400/25 bg-teal-400/10">
+                <item.icon className="h-5 w-5 text-teal-300" />
+              </div>
+              <h3 className="mb-2 text-base font-semibold text-white">{item.title}</h3>
+              <p className="text-sm leading-6 text-text-secondary">{item.description}</p>
+            </motion.div>
+          ))}
+        </div>
+
         <div className="mb-12 grid gap-3 lg:grid-cols-4">
           {workflow.map((step, index) => (
             <motion.div
@@ -73,7 +113,7 @@ export default function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.45, delay: index * 0.06 }}
-              className="group relative overflow-hidden rounded-lg border border-white/10 bg-white/5 p-5"
+                className="group premium-panel relative overflow-hidden p-5"
             >
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gold/25 bg-gold/10">
@@ -100,7 +140,7 @@ export default function FeaturesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.45, delay: index * 0.05 }}
-                className="card-hover rounded-lg border border-white/10 bg-[#0a0d12] p-5"
+                className="card-hover premium-panel p-5"
               >
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5">
