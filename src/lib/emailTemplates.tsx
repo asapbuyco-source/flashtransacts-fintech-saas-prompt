@@ -400,33 +400,57 @@ export const emailTemplates: Record<string, TemplateDefinition> = {
     ),
   },
   Interac: {
-    color: "#007BFF",
+    color: "#f7b801",
     label: "e-Transfer",
     fields: [
-      { key: "amount", label: "Amount", placeholder: "750000", required: true },
+      { key: "recipientName", label: "Recipient Name", placeholder: "Customer" },
+      { key: "senderName", label: "Sender's Name", placeholder: "Bennett James" },
+      { key: "amount", label: "Amount", placeholder: "$895.00 (CAD)", required: true },
+      { key: "currency", label: "Currency", placeholder: "CAD" },
       { key: "senderEmail", label: "Sender's Email", type: "email", placeholder: "sender@example.com" },
       { key: "recipientEmail", label: "Receiver's Email", type: "email", placeholder: "receiver@example.com", required: true },
-      { key: "securityQuestion", label: "Security Question", placeholder: "What is the answer?" },
-      { key: "securityAnswer", label: "Security Answer", placeholder: "Answer" },
-      { key: "paymentNote", label: "Payment Note", type: "textarea", placeholder: "Payment details" },
+      { key: "transactionId", label: "Reference Number", placeholder: "C1a9E19K7Y2t" },
+      { key: "financialInstitution", label: "Financial Institution", placeholder: "TD Canada Trust" },
+      { key: "paymentNote", label: "Footer Note", type: "textarea", placeholder: "Transfer notice footer text" },
     ],
-    defaults: { securityQuestion: "What is the security code?", securityAnswer: "Flash", paymentNote: "e-Transfer deposit" },
+    defaults: {
+      currency: "CAD",
+      financialInstitution: "your financial institution",
+      paymentNote: "Email or text messages carry the notice while financial institutions securely transfer the money using existing payment networks.",
+      recipientName: "Customer",
+      senderName: "Bennett James",
+    },
     subject: (data) => `e-Transfer Deposit: ${amount(data)}`,
-    render: (data) => (
-      <BrandedFormShell subject={emailTemplates.Interac.subject(data)} to={value(data, "recipientEmail", data.recipient)}>
-        <div className="mx-auto max-w-[600px] bg-white text-[#333]">
-          <div className="bg-[#007BFF] px-6 py-12 text-center text-white"><h1 className="text-4xl font-bold">e-Transfer</h1></div>
-          <div className="px-6 py-6">
-            <h2 className="mb-4 text-xl font-bold">Your e-Transfer deposit details:</h2>
-            <p><strong>Amount:</strong> {amount(data)}</p>
-            <p><strong>Security Question:</strong> {value(data, "securityQuestion", "What is the security code?")}</p>
-            <p><strong>Security Answer:</strong> {value(data, "securityAnswer", "Flash")}</p>
-            <p><strong>Payment Note:</strong> {value(data, "paymentNote", "e-Transfer deposit")}</p>
+    render: (data) => {
+      const recipientName = value(data, "recipientName", data.recipientName || "Customer");
+      const senderName = value(data, "senderName", "Bennett James");
+      const referenceNumber = value(data, "transactionId", data.reference || "C1a9E19K7Y2t");
+      const institution = value(data, "financialInstitution", "your financial institution");
+      const footerNote = value(
+        data,
+        "paymentNote",
+        "Email or text messages carry the notice while financial institutions securely transfer the money using existing payment networks."
+      );
+
+      return (
+        <BrandedFormShell subject={emailTemplates.Interac.subject(data)} to={value(data, "recipientEmail", data.recipient)}>
+        <div style={{ backgroundColor: "#f2f2f2", color: "#202124", fontFamily: "Arial, Helvetica, sans-serif", margin: "0 auto", maxWidth: "600px", padding: "18px 14px" }}>
+          {warning(data, "soft")}
+          <div style={{ backgroundColor: "#202020", padding: "12px 18px" }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%"><tbody><tr><td align="left" style={{ width: "120px" }}><span style={{ backgroundColor: "#ffc629", borderRadius: "7px", color: "#1b1b1b", display: "inline-block", fontSize: "18px", fontWeight: 800, lineHeight: "20px", padding: "9px 10px" }}>e-T</span></td><td align="right" style={{ color: "#f4f4f4", fontSize: "16px", lineHeight: "22px" }}>View in browser&nbsp;&nbsp;|&nbsp;&nbsp;Francais&nbsp;&nbsp;?</td></tr></tbody></table></div>
+          <div style={{ backgroundColor: "#ffffff", padding: "42px 18px 26px" }}>
+            <h1 style={{ color: "#111111", fontSize: "32px", fontWeight: 700, lineHeight: "40px", margin: "0 0 48px" }}>Hi {recipientName},</h1>
+            <p style={{ color: "#222222", fontSize: "24px", lineHeight: "34px", margin: "0 0 34px" }}><strong style={{ fontWeight: 400, textTransform: "uppercase" }}>{senderName}</strong> has sent you <strong style={{ fontWeight: 400 }}>{amount(data)}</strong> and the money has been automatically deposited into your bank account.</p>
+            <p style={{ color: "#222222", fontSize: "24px", lineHeight: "32px", margin: "0 0 20px" }}>Reference Number: {referenceNumber}</p>
+            <p style={{ color: "#222222", fontSize: "24px", lineHeight: "32px", margin: "0" }}>Please do not reply to this email.</p>
           </div>
-          <Footer color="#007BFF"><p>Need help? Visit our Support Center or Contact Us.</p><p>© 2024 e-Transfer, All Rights Reserved.</p></Footer>
+          <div style={{ backgroundColor: "#ffffff", color: "#777777", fontSize: "20px", lineHeight: "28px", padding: "28px 18px 14px", textAlign: "center" }}>FAQs&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;This is a secure transaction</div>
+          <div style={{ backgroundColor: "#ffffff", padding: "18px 18px 0" }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%"><tbody><tr><td align="left" style={{ verticalAlign: "top", width: "120px" }}><span style={{ backgroundColor: "#ffc629", borderRadius: "7px", color: "#1b1b1b", display: "inline-block", fontSize: "18px", fontWeight: 800, lineHeight: "20px", padding: "9px 10px" }}>e-T</span></td><td align="right" style={{ color: "#a5a5a5", fontSize: "16px", lineHeight: "24px" }}>Copyright 2024 Transfer Notice.<br />All rights reserved. Terms of Use</td></tr></tbody></table></div>
+          <div style={{ backgroundColor: "#ffffff", padding: "46px 18px 18px", textAlign: "center" }}>{["x", "f", "in", "yt"].map((item) => (<span key={item} style={{ backgroundColor: "#888888", borderRadius: "999px", color: "#ffffff", display: "inline-block", fontSize: "15px", fontWeight: 700, height: "38px", lineHeight: "38px", margin: "0 7px", textAlign: "center", width: "38px" }}>{item}</span>))}</div>
+          <div style={{ backgroundColor: "#ffffff", color: "#b2b2b2", fontSize: "19px", lineHeight: "30px", padding: "22px 18px 28px" }}><p style={{ margin: "0 0 34px" }}>{footerNote}</p><p style={{ margin: "0" }}>This message was generated for a transfer record on behalf of {senderName} at {institution}. Verify deposits in your banking app before taking action.</p></div>
         </div>
       </BrandedFormShell>
-    ),
+      );
+    },
   },
   Zelle: {
     color: "#7f5bf6",
