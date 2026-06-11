@@ -15,14 +15,14 @@ const GLOBAL_LIMITS = {
 const BRAND_SENDERS = {
   "Apple Pay": { name: "Receipts", localPart: "receipts" },
   Binance: { name: "Binance", localPart: "binance" },
-  "Cash App": { name: "Cash app", localPart: "Cash app" },
+  "Cash App": { name: "Cash App", localPart: "Cash App" },
   Chime: { name: "Chime", localPart: "chime" },
   Coinbase: { name: "Coinbase", localPart: "coinbase" },
   Custom: { name: "FlashTransacts", localPart: "notify" },
   Interac: { name: "Interac", localPart: "interac" },
-  PayPal: { name: "paypal", localPart: "paypal" },
+  PayPal: { name: "PayPal", localPart: "PayPal" },
   Venmo: { name: "Venmo", localPart: "venmo" },
-  Zelle: { name: "Transfers", localPart: "transfers" },
+  Zelle: { name: "Zelle", localPart: "Zelle" },
 };
 
 const BRAND_ALIASES = Object.fromEntries(
